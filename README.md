@@ -30,7 +30,7 @@ CREATE USER biblioteca WITH PASSWORD 'Senha123@';
 ``` sql
 GRANT ALL PRIVILEGES ON DATABASE biblioteca TO biblioteca;
 
-GRANT USAGE ON SCHEMA public TO biblioteca;
+GRANT CREATE, USAGE ON SCHEMA public TO biblioteca;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO biblioteca;
 

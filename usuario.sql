@@ -1,15 +1,14 @@
 -- Usuários 
 CREATE TABLE usuario (
-    id SERIAL PRIMARY KEY,
+    matricula BIGSERIAL,
     nome VARCHAR(100) NOT NULL,
     cpf VARCHAR(100),
-    cnpj VARCHAR(100),
     email VARCHAR(100) NOT NULL,
-    matricula VARCHAR(100) NOT NULL,
     data_nascimento DATE,
-    senha VARCHAR(100) NOT NULL,
+    senha VARCHAR(100),
     foto VARCHAR(100),
-    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_usuario PRIMARY KEY (matricula)
 );
 -- Tokens
 CREATE TABLE token (
@@ -17,16 +16,16 @@ CREATE TABLE token (
     token VARCHAR(255) NOT NULL,
     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
     data_expiracao DATETIME NOT NULL,
-    id_usuario INT,
-    FOREIGN KEY id_usuario REFERENCES usuario(id)
+    matricula_usuario BIGINT,
+    FOREIGN KEY (matricula_usuario) REFERENCES usuario(matricula)
 );
 -- Telefones
 CREATE TABLE telefone (
     id SERIAL PRIMARY KEY,
     telefone VARCHAR(100),
-    id_usuario INT,
+    matricula_usuario BIGINT,
     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY id_usuario REFERENCES usuario(id)
+    FOREIGN KEY (matricula_usuario) REFERENCES usuario(matricula)
 );
 -- Estados (UFs)
 CREATE TABLE uf(
@@ -50,11 +49,11 @@ CREATE TABLE endereco (
     numero VARCHAR(100) NOT NULL,
     id_uf INT,
     id_cidade INT,
-    id_usuario INT,
+    matricula_usuario BIGINT,
     id_editora INT,
     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY id_uf REFERENCES uf(id),
-    FOREIGN KEY id_cidade REFERENCES cidade(id),
-    FOREIGN KEY id_usuario REFERENCES usuario(id),
-    FOREIGN KEY id_editora REFERENCES editora(id)
+    FOREIGN KEY (id_uf) REFERENCES uf(id),
+    FOREIGN KEY (id_cidade) REFERENCES cidade(id),
+    FOREIGN KEY (matricula_usuario) REFERENCES usuario(matricula),
+    FOREIGN KEY (id_editora) REFERENCES editora(id)
 );
