@@ -1,0 +1,28 @@
+{
+  "name": "biblioteca",
+  "version": "1.0.0",
+  "description": "Biblioteca para disciplina de Programacão 1 - Sistemas Unoesc",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GuiSmith/biblioteca.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GuiSmith/biblioteca/issues"
+  },
+  "homepage": "https://github.com/GuiSmith/biblioteca#readme",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "hstore": "^0.0.1",
+    "pg": "^8.14.1",
+    "sequelize": "^6.37.7"
+  }
+}
