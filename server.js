@@ -1,6 +1,10 @@
 import express from "express";
 import sequelize from "./banco.js";
-import './models/index.js';
+
+import util from './controllers/util.js';
+import categoria from "./controllers/categoria.js";
+import autor from './controllers/autor.js';
+import livro from './controllers/livro.js';
 
 const app = express();
 app.use(express.json());
@@ -8,38 +12,30 @@ app.use(express.json());
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
-    
-    app.get('/listar', async (req, res) => {
-        try {
-            const tabelas = await sequelize.getQueryInterface().showAllTables();
-            const hasTables = tabelas && tabelas.length > 0;
 
-            res.status(hasTables ? 200 : 204).json({
-                ok: true,
-                mensagem: hasTables ? 'Lista de tabelas' : 'Nenhuma tabela encontrada',
-                tabelas: tabelas,
-            });
-        } catch (error) {
-            res.status(500).json({
-                ok: false,
-                mensagem: 'Erro ao listar tabelas',
-                erro: error.message,
-            });
-        }
-    });
+// Utilitários
+app.get('/tabelas', util.tabelas);
+app.get('/colunas/:tabela', util.colunas);
 
-    // app.get('/listar/:tabela', (req,res) => {
-    //     try {
-            
-    //     } catch (error) {
-            
-    //     }
-    // });
+// Categoria
+app.get('/categoria', categoria.listar);
+app.get('/categoria/:id', categoria.selecionar);
+app.post('/categoria', categoria.inserir);
+app.put('/categoria/:id', categoria.alterar);
+app.delete('/categoria/:id', categoria.excluir);
 
-    (async () => {
-        const usuarios = await Usuario.findAll();
-        console.log(usuarios);
-    })();
+// Autor
+app.get('/autor', autor.listar);
+app.get('/autor/:id', autor.selecionar);
+app.post('/autor', autor.inserir);
+app.put('/autor/:id', autor.alterar);
+app.delete('/autor/:id', autor.excluir);
 
+// Livro
+app.get('/livro', livro.listar);
+app.get('/livro/:id', livro.selecionar);
+app.post('/livro', livro.inserir);
+app.put('/livro/:id', livro.alterar);
+app.delete('/livro/:id', livro.excluir);
 
-app.listen(4000, () => console.log("API rodando na porta 4000"));
+app.listen(5000, () => console.log("API rodando na porta 5000"));

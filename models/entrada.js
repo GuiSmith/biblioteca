@@ -1,8 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-import Usuario from "./usuario.js";
-
 const Entrada = sequelize.define('entrada', {
     id: {
         type: DataTypes.INTEGER,
@@ -22,15 +20,6 @@ const Entrada = sequelize.define('entrada', {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-});
-
-Entrada.belongsTo(Usuario, {
-    constraint: false,
-    foreignKey: 'id_usuario',
-});
-
-Usuario.hasMany(Entrada, {
-    foreignKey: 'id_entrada',
 });
 
 export default Entrada;

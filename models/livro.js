@@ -1,8 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-import Autor from "./autor.js";
-import Categoria from "./categoria.js";
 
 const Livro = sequelize.define("livro", {
     id: {
@@ -26,15 +24,6 @@ const Livro = sequelize.define("livro", {
         type: DataTypes.TEXT,
         allowNull: true,
     },
-});
-
-Livro.belongsTo(Autor, {
-    constraint: true,
-    foreignKey: 'id_autor',
-});
-Livro.belongsTo(Categoria, {
-    constraint: true,
-    foreignKey: 'id_categoria',
 });
 
 export default Livro;

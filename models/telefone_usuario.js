@@ -1,26 +1,25 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../banco.js';
 
-const Token = sequelize.define('token', {
+const TelefoneUsuario = sequelize.define('telefone_usuario', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
         allowNull: false,
         primaryKey: true,
     },
-    token: {
+    ddd: {
         type: DataTypes.STRING(100),
         allowNull: false,
-        unique: true,
     },
-    data_expiracao: {
-        type: DataTypes.DATE,
+    numero: {
+        type: DataTypes.STRING(100),
         allowNull: false,
     },
     id_usuario: {
         type: DataTypes.INTEGER,
         allowNull: false,
-    }
+    },
 });
 
-export default Token;
+export default TelefoneUsuario;

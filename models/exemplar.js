@@ -1,11 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-import Livro from "./livro.js";
-import Entrada from "./entrada.js";
-import Fornecedor from "./fornecedor.js";
-import Usuario from "./usuario.js";
-
 const Exemplar = sequelize.define('exemplar', {
     id: {
         type: DataTypes.INTEGER,
@@ -48,26 +43,6 @@ const Exemplar = sequelize.define('exemplar', {
         type: DataTypes.TEXT,
         allowNull: true
     }
-});
-
-Exemplar.belongsTo(Livro, {
-    constraint: true,
-    foreignKey: 'id_livro'
-});
-
-Exemplar.belongsTo(Entrada, {
-    constraint: false,
-    foreignKey: 'id_entrada'
-});
-
-Exemplar.belongsTo(Fornecedor, {
-    constraint: false,
-    foreignKey: 'id_fornecedor'
-});
-
-Exemplar.belongsTo(Usuario, {
-    constraint: false,
-    foreignKey: 'id_usuario'
 });
 
 export default Exemplar;

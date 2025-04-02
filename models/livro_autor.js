@@ -1,21 +1,21 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-const Cidade = sequelize.define('cidade', {
+const LivroAutor = sequelize.define('livro_autor', {
     id: {
         type: DataTypes.INTEGER,
-        autoIncrement: true,
-        allowNull: false,
         primaryKey: true,
+        allowNull: false,
+        autoIncrement: true,
     },
-    nome: {
-        type: DataTypes.STRING(100),
+    id_livro: {
+        type: DataTypes.INTEGER,
         allowNull: false,
     },
-    id_uf: {
+    id_autor: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
 });
 
-export default Cidade;
+export default LivroAutor;

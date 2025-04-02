@@ -1,9 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-import Usuario from "./usuario.js";
-import Exemplar from "./exemplar.js";
-
 const Emprestimo = sequelize.define('emprestimo', {
     id: {
         type: DataTypes.INTEGER,
@@ -26,27 +23,11 @@ const Emprestimo = sequelize.define('emprestimo', {
     observacoes: {
         type: DataTypes.TEXT,
         allowNull: true
+    },
+    id_usuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
     }
-});
-
-Emprestimo.belongsTo(Usuario, {
-    constraint: true,
-    foreignKey: 'id_usuario'
-});
-
-Emprestimo.belongsTo(Exemplar, {
-    constraint: true,
-    foreignKey: 'id_exemplar'
-});
-
-Usuario.hasMany(Emprestimo, {
-    foreignKey: 'id_usuario',
-    constraint: true
-});
-
-Exemplar.hasMany(Emprestimo, {
-    foreignKey: 'id_exemplar',
-    constraint: true
 });
 
 export default Emprestimo;
