@@ -2,55 +2,102 @@ import sequelize from "../banco.js";
 
 const tabelas = async (req, res) => {
     try {
-        const tabelas = await sequelize.getQueryInterface().showAllTables();
-        const hasTables = tabelas && tabelas.length > 0;
+        const tables = await sequelize.getQueryInterface().showAllTables();
+        const hasTables = tables && tables.length > 0;
 
         res.status(hasTables ? 200 : 204).json({
             ok: true,
-            mensagem: hasTables ? 'Lista de tabelas' : 'Nenhuma tabela encontrada',
-            tabelas: tabelas,
+            message: hasTables ? 'Lista de tabelas' : 'Nenhuma tabela encontrada',
+            tables: tables,
         });
     } catch (error) {
         res.status(500).json({
             ok: false,
-            mensagem: 'Erro ao listar tabelas',
-            erro: error.message,
+            message: 'Erro ao listar tabelas',
+            error: error.message,
         });
     }
-}
+};
 
 const colunas = async (req, res) => {
     try {
-        const { tabela } = req.params;
-        if (!tabela) {
+        const { table } = req.params;
+        if (!table) {
             return res.status(400).json({
                 ok: false,
-                mensagem: 'Nome da tabela não fornecido',
+                message: 'Nome da tabela não fornecido',
             });
         }
 
-        const colunas = await sequelize.getQueryInterface().describeTable(tabela);
+        const columns = await sequelize.getQueryInterface().describeTable(table);
 
-        const colunasFormatadas = Object.entries(colunas).map(([nome, detalhes]) => ({
-            nome,
-            allowNull: detalhes.allowNull,
-            defaultValue: detalhes.defaultValue,
-            type: detalhes.type,
-            length: detalhes.type.match(/\((\d+)\)/)?.[1] || null,
+        const formattedColumns = Object.entries(columns).map(([name, details]) => ({
+            name,
+            allowNull: details.allowNull,
+            defaultValue: details.defaultValue,
+            type: details.type,
+            length: details.type.match(/\((\d+)\)/)?.[1] || null,
         }));
 
         res.status(200).json({
             ok: true,
-            mensagem: 'Lista de colunas',
-            colunas: colunasFormatadas,
+            message: 'Lista de colunas',
+            columns: formattedColumns,
         });
     } catch (error) {
         res.status(500).json({
             ok: false,
-            mensagem: 'Erro ao listar colunas',
-            erro: error.message,
+            message: 'Erro ao listar colunas',
+            error: error.message,
         });
     }
+};
+
+const requiredColumns = async (table) => {
+    return sequelize.getQueryInterface().describeTable(table)
+        .then((columns) => {
+            return Object.entries(columns)
+                .filter(([name, details]) => details.allowNull === false && name.toLowerCase() !== 'id')
+                .map(([name]) => name);
+        })
+        .catch((error) => {
+            console.log(`Erro ao obter colunas obrigatórias: ${error}`);
+        });
+};
+
+const permittedColumns = async (table) => {
+    return sequelize.getQueryInterface().describeTable(table)
+        .then((columns) => {
+            return Object.entries(columns)
+                .filter(([name,details]) => name.toLocaleLowerCase() !== 'id' && name.toLocaleLowerCase() !== 'createdat' && name.toLocaleLowerCase() !== 'updatedat')
+                .map(([name]) => name);
+        })
+        .catch((error) => {
+            console.log(`Erro ao obter colunas permitidas: ${error}`);
+        });
 }
 
-export default { tabelas, colunas };
+const isNumber = (value) => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) return false;
+    return parsed.toString() === value;
+};
+
+const filterObjectKeys = (obj, array) => {
+    const result = {};
+    for (const key of array) {
+        if (obj.hasOwnProperty(key)) {
+            result[key] = obj[key];
+        }
+    }
+    return result;
+};
+
+const keysMatch = (obj, array) => {
+    for (const key of array) {
+        if (!obj.hasOwnProperty(key)) return false;
+    }
+    return true;
+}
+
+export default { tabelas, colunas, requiredColumns, permittedColumns, isNumber, filterObjectKeys, keysMatch };
