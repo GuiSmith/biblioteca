@@ -80,8 +80,12 @@ Editora.hasMany(TelefoneEditora, { foreignKey: 'id_editora' });
 // ==================== LIVROS ====================
 
 // Livro e Autor (relação muitos-para-muitos)
-Livro.belongsToMany(Autor, { through: "livro_autor", foreignKey: "id_livro" });
-Autor.belongsToMany(Livro, { through: "livro_autor", foreignKey: "id_autor" });
+Livro.belongsToMany(Autor, { through: LivroAutor, foreignKey: 'id_livro', as: 'livros' });
+Autor.belongsToMany(Livro, { through: LivroAutor, foreignKey: 'id_autor', as: 'autores' });
+Livro.hasMany(LivroAutor, { foreignKey: 'id_livro' });
+LivroAutor.belongsTo(Livro, { as: 'livro', foreignKey: 'id_livro' });
+Autor.hasMany(LivroAutor, { foreignKey: 'id_autor' });
+LivroAutor.belongsTo(Autor, { as: 'autor', foreignKey: 'id_autor' });
 
 // Livro e Exemplar
 Livro.hasMany(Exemplar, { foreignKey: 'id_livro' });
@@ -104,3 +108,5 @@ Fornecedor.hasMany(Exemplar, { foreignKey: 'id_fornecedor' });
 Exemplar.belongsTo(Fornecedor, { as: 'fornecedor', foreignKey: 'id_fornecedor' });
 
 // Editora e Exemplar
+Livro.belongsToMany(Editora, { through: ExemplarEditora, foreignKey: "id_livro", as: "editoras" });
+Editora.belongsToMany(Livro, { through: ExemplarEditora, foreignKey: "id_editora", as: "livros" });
