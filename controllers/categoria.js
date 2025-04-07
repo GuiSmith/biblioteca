@@ -1,10 +1,29 @@
 import categoria from '../models/categoria.js';
+import livro from '../models/livro.js';
 import util from './util.js';
 
 const tabela = 'categoria';
 
 const listar = async (req, res) => {
     const dados = await categoria.findAll();
+    const status = dados.length > 0 ? 200 : 204;
+    res.status(status).json(dados);
+}
+
+const listarLivros = async (req, res) => {
+    // Verifica se o ID é um número
+    if (!util.isNumber(req.params.id)) {
+        return res.status(400).json({ mensagem: "ID inválido" });
+    }
+    // Verifica se o ID existe
+    const categoriaExistente = await categoria.findByPk(req.params.id);
+    if (!categoriaExistente) {
+        return res.status(404).json({ mensagem: "Categoria não encontrada" });
+    }
+    const id = req.params.id;
+    const dados = await livro.findAll({
+        where: { id_categoria: id }
+    });
     const status = dados.length > 0 ? 200 : 204;
     res.status(status).json(dados);
 }
@@ -47,12 +66,12 @@ const alterar = async (req, res) => {
     }
     // Verifica se o ID é um número
     if (!util.isNumber(req.params.id)) {
-        return res.status(400).json({ message: "ID inválido" });
+        return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
     const categoriaExistente = await categoria.findByPk(req.params.id);
     if (!categoriaExistente) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+        return res.status(404).json({ mensagem: "Categoria não encontrada" });
     }
     // Atualiza os dados
     await categoria.update(req.body, {
@@ -67,12 +86,12 @@ const alterar = async (req, res) => {
 const excluir = async (req, res) => {
     // Verifica se o ID é um número
     if (!util.isNumber(req.params.id)) {
-        return res.status(400).json({ message: "ID inválido" });
+        return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
     const categoriaExistente = await categoria.findByPk(req.params.id);
     if (!categoriaExistente) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
+        return res.status(404).json({ mensagem: "Categoria não encontrada" });
     }
     // Exclui o registro
     await categoria.destroy({
@@ -82,4 +101,4 @@ const excluir = async (req, res) => {
         .catch(err => res.status(400).json(err));
 }
 
-export default { listar, selecionar, inserir, alterar, excluir };
+export default { listar, selecionar, inserir, alterar, excluir, listarLivros };

@@ -19,6 +19,7 @@ app.get('/colunas/:tabela', util.colunas);
 
 // Categoria
 app.get('/categoria', categoria.listar);
+app.get('/categoria/:id/livros',categoria.listarLivros);
 app.get('/categoria/:id', categoria.selecionar);
 app.post('/categoria', categoria.inserir);
 app.put('/categoria/:id', categoria.alterar);
