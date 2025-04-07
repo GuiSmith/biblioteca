@@ -93,7 +93,7 @@ Exemplar.belongsTo(Livro, { as: 'livro', foreignKey: 'id_livro' });
 
 // Livro e Categoria
 Livro.belongsTo(Categoria, { as: 'categoria', foreignKey: 'id_categoria' });
-Categoria.hasMany(Livro, { foreignKey: 'id_categoria' });
+Categoria.hasMany(Livro, {as:'livros', foreignKey: 'id_categoria' });
 
 // Livro e Reserva
 Reserva.belongsTo(Livro, { as: 'livro', foreignKey: 'id_livro' });
