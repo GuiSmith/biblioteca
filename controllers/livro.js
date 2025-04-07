@@ -1,10 +1,15 @@
+import '../models/relacionamentos.js';
 import livro from '../models/livro.js';
 import util from './util.js';
 
 const tabela = 'livro';
 
 const listar = async (req, res) => {
-    const dados = await livro.findAll();
+    const dados = await livro.findAll({
+        include: [
+            { model: livro.sequelize.models.categoria, as: 'categoria' }
+        ]
+    });
     const statusCode = dados.length > 0 ? 200 : 204;
     res.status(statusCode).json(dados);
 }
@@ -93,3 +98,5 @@ const excluir = async (req, res) => {
 }
 
 export default { listar, selecionar, inserir, alterar, excluir };
+
+console.log(livro.associations);
