@@ -80,7 +80,7 @@ const permittedColumns = async (table) => {
 const isNumber = (value) => {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) return false;
-    return parsed.toString() === value;
+    return parsed.toString() === String(value);
 };
 
 const filterObjectKeys = (obj, array) => {

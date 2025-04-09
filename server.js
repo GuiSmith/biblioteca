@@ -39,4 +39,8 @@ app.post('/livro', livro.inserir);
 app.put('/livro/:id', livro.alterar);
 app.delete('/livro/:id', livro.excluir);
 
+// Livro autor
+app.post('/livro/:id/autores', livro.inserirLivroAutor);
+app.put('/livro/:id/autores', livro.alterarLivroAutor);
+
 app.listen(5000, () => console.log("API rodando na porta 5000"));
