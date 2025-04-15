@@ -60,9 +60,9 @@ const selecionar = async (id) => {
     return registro.dataValues;
 }
 
-const inserir = async ({id_autor, id_livro}) => {
+const inserir = async ({ id_autor, id_livro }) => {
     // Valida se ID de livro passado é número
-    if(!util.isNumber(id_livro)){
+    if (!util.isNumber(id_livro)) {
         return {
             status: 400,
             mensagem: `ID de livro ${id_livro} não é do tipo número!`
@@ -71,7 +71,7 @@ const inserir = async ({id_autor, id_livro}) => {
 
     // Valida se livro existe
     const livroExistente = await Livro.findByPk(id_livro);
-    if(!livroExistente){
+    if (!livroExistente) {
         return {
             status: 400,
             mensagem: `Livro ID ${id_livro} não encontrado!`
@@ -79,7 +79,7 @@ const inserir = async ({id_autor, id_livro}) => {
     }
 
     // Valida se ID de autor passado é número
-    if(!util.isNumber(id_autor)){
+    if (!util.isNumber(id_autor)) {
         return {
             status: 400,
             mensagem: `ID de autor ${id_autor} não é do tipo número!`
@@ -88,7 +88,7 @@ const inserir = async ({id_autor, id_livro}) => {
 
     // Valida se autor existe
     const autorExistente = Autor.findByPk(id_autor);
-    if(!autorExistente){
+    if (!autorExistente) {
         return {
             status: 400,
             mensagem: `Autor ID ${id_autor} não encontrado!`
@@ -101,14 +101,14 @@ const inserir = async ({id_autor, id_livro}) => {
             id_livro, id_autor
         }
     });
-    if(livroAutorExistente){
+    if (livroAutorExistente) {
         return {
             status: 400,
             mensagem: `Já possui vínculo entre este autor e livro!`
         };
     }
 
-    return await livroAutor.create({id_livro, id_autor})
+    return await livroAutor.create({ id_livro, id_autor })
         .then(result => ({
             status: 201,
             ...result.dataValues
@@ -119,18 +119,18 @@ const inserir = async ({id_autor, id_livro}) => {
         }));
 };
 
-const alterar = async ({id, id_autor, id_livro}) => {
+const alterar = async ({ id, id_autor, id_livro }) => {
     // Valida se ID passado é do tipo número
-    if(!util.isNumber(id)){
+    if (!util.isNumber(id)) {
         return {
             status: 400,
-            mensagem: `ID ${id} não é do tipo número: ${typeof(id)}`
+            mensagem: `ID ${id} não é do tipo número: ${typeof (id)}`
         };
     }
-    
+
     // Valida se existe ID passado
     const livroAutorExistente = await livroAutor.findByPk(id);
-    if(!livroAutorExistente){
+    if (!livroAutorExistente) {
         return {
             status: 400,
             mensagem: `Vínculo ID ${id} não existe!`
@@ -138,7 +138,7 @@ const alterar = async ({id, id_autor, id_livro}) => {
     }
 
     // Valida se ID de livro passado é número
-    if(!util.isNumber(id_livro)){
+    if (!util.isNumber(id_livro)) {
         return {
             status: 400,
             mensagem: `ID de livro ${id_livro} não é do tipo número!`
@@ -147,7 +147,7 @@ const alterar = async ({id, id_autor, id_livro}) => {
 
     // Valida se livro existe
     const livroExistente = await Livro.findByPk(id_livro);
-    if(!livroExistente){
+    if (!livroExistente) {
         return {
             status: 400,
             mensagem: `Livro ID ${id_livro} não encontrado!`
@@ -155,7 +155,7 @@ const alterar = async ({id, id_autor, id_livro}) => {
     }
 
     // Valida se ID de autor passado é número
-    if(!util.isNumber(id_autor)){
+    if (!util.isNumber(id_autor)) {
         return {
             status: 400,
             mensagem: `ID de autor ${id_autor} não é do tipo número!`
@@ -164,7 +164,7 @@ const alterar = async ({id, id_autor, id_livro}) => {
 
     // Valida se autor existe
     const autorExistente = Autor.findByPk(id_autor);
-    if(!autorExistente){
+    if (!autorExistente) {
         return {
             status: 400,
             mensagem: `Autor ID ${id_autor} não encontrado!`
@@ -178,7 +178,7 @@ const alterar = async ({id, id_autor, id_livro}) => {
         }
     });
 
-    if(outroLivroAutorExistente && outroLivroAutorExistente.dataValues.id !== livroAutorExistente.dataValues.id){
+    if (outroLivroAutorExistente && outroLivroAutorExistente.dataValues.id !== livroAutorExistente.dataValues.id) {
         return {
             status: 400,
             mensagem: `Já possui vínculo entre este autor e livro no ID ${outroLivroAutorExistente.dataValues.id}`
@@ -198,9 +198,31 @@ const alterar = async ({id, id_autor, id_livro}) => {
 };
 
 const excluir = async (id) => {
-    await livroAutor.destroy({ where: { id: id } })
-        .then(result => result)
-        .catch(err => err);
+    // Valida se id passado é número
+    if (!util.isNumber(id)) {
+        return {
+            status: 400,
+            mensagem: `ID ${id} não é um número`,
+        };
+    }
+    // Valida se existe um registro com o id passado
+    const livroAutorExistente = await livroAutor.findByPk(id);
+    if (!livroAutorExistente) {
+        return {
+            status: 400,
+            mensagem: `Vínculo com ID ${id} não existe`,
+        };
+    }
+
+    return await livroAutor.destroy({ where: { id: id } })
+        .then(result => ({
+            status: result > 0 ? 200 : 204,
+            mensagem: `${result} vínculos deletados`,
+        }))
+        .catch(err => ({
+            status: 500,
+            mensagem: `Houve um erro ao deletar vínculo: ${err}`,
+        }));
 };
 
 export default { selecionar, inserir, alterar, excluir, listarAutores, listarLivros, tabela };
