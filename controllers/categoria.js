@@ -2,8 +2,6 @@ import categoria from '../models/categoria.js';
 import livro from '../models/livro.js';
 import util from './util.js';
 
-const tabela = 'categoria';
-
 const listar = async (req, res) => {
     const dados = await categoria.findAll();
     const status = dados.length > 0 ? 200 : 204;
@@ -34,12 +32,12 @@ const selecionar = async (req, res) => {
             const status = result ? 200 : 204;
             res.status(status).json(result);
         })
-        .catch(err => res.status(400).json(err));
+        .catch(err => res.status(500).json(err));
 }
 
 const inserir = async (req, res) => {
-    const requiredColumns = await util.requiredColumns(tabela);
-    const permittedColumns = await util.permittedColumns(tabela);
+    const requiredColumns = await util.requiredColumns(categoria.getTableName());
+    const permittedColumns = await util.permittedColumns(categoria.getTableName());
     const data = util.filterObjectKeys(req.body, permittedColumns);
     if (util.keysMatch(data, requiredColumns) === false) {
         return res.status(400).json({
@@ -55,7 +53,7 @@ const inserir = async (req, res) => {
 }
 
 const alterar = async (req, res) => {
-    const permittedColumns = await util.permittedColumns(tabela);
+    const permittedColumns = await util.permittedColumns(categoria.getTableName());
     const data = util.filterObjectKeys(req.body, [...permittedColumns, 'id']);
     if (Object.keys(data).length == 0) {
         return res.status(400).json({
