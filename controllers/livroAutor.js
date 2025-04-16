@@ -197,9 +197,10 @@ const alterar = async ({ id, id_autor, id_livro }) => {
         }));
 };
 
-const excluir = async (id) => {
+const excluir = async ({ id }) => {
     // Valida se id passado é número
     if (!util.isNumber(id)) {
+        console.log(id);
         return {
             status: 400,
             mensagem: `ID ${id} não é um número`,

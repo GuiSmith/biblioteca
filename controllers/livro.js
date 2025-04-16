@@ -118,8 +118,8 @@ const alterarLivroAutor = async (req, res) => {
 };
 
 const excluirLivroAutor = async (req, res) => {
-    const id = req.params.id;
-    const response = await livroAutor.excluir({id});
+    const { id } = req.body;
+    const response = await livroAutor.excluir({ id });
 
     const status = response.status;
     delete response.status;
