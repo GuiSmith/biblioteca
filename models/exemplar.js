@@ -17,10 +17,6 @@ const Exemplar = sequelize.define('exemplar', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    isbn: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
     ano: {
         type: DataTypes.INTEGER,
         allowNull: false
