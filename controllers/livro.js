@@ -108,9 +108,7 @@ const inserirLivroAutor = async (req, res) => {
 };
 
 const alterarLivroAutor = async (req, res) => {
-    const id = req.body.id;
-    const id_livro = req.params.id;
-    const id_autor = req.body.id_autor;
+    const { id, id_livro, id_autor } = req.body;
     const response = await livroAutor.alterar({id, id_livro, id_autor});
 
     const status = response.status;
