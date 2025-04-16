@@ -129,10 +129,4 @@ const excluirLivroAutor = async (req, res) => {
     res.status(status).json(response);
 }
 
-(async () => {
-    const id = 1;
-    const response = await livroAutor.excluir(id);
-    console.log(response);
-})();
-
 export default { listar, selecionar, inserir, alterar, excluir, inserirLivroAutor, alterarLivroAutor, excluirLivroAutor };
