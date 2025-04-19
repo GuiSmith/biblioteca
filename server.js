@@ -1,16 +1,24 @@
 import express from "express";
 import sequelize from "./banco.js";
+import cors from 'cors';
+
+const app = express();
+const corsOptions = {
+    origin: 'https://guismith.github.io/biblioteca',  // Domínio permitido
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'],  // Cabeçalhos permitidos
+};
+
+app.use(express.json());
+app.use(cors(corsOptions));
+
+const PORT = process.env.PORT || 5000;
 
 import util from './controllers/util.js';
 import categoria from "./controllers/categoria.js";
 import autor from './controllers/autor.js';
 import livro from './controllers/livro.js';
 import livroAutor from './controllers/livroAutor.js';
-
-const app = express();
-app.use(express.json());
-
-const PORT = process.env.PORT || 5000;
 
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
@@ -22,7 +30,7 @@ app.get('/colunas/:tabela', util.colunas);
 
 // Categoria
 app.get('/categoria', categoria.listar);
-app.get('/categoria/:id/livros',categoria.listarLivros);
+app.get('/categoria/:id/livros', categoria.listarLivros);
 app.get('/categoria/:id', categoria.selecionar);
 app.post('/categoria', categoria.inserir);
 app.put('/categoria/:id', categoria.alterar);
