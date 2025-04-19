@@ -31,13 +31,17 @@ const colunas = async (req, res) => {
 
         const columns = await sequelize.getQueryInterface().describeTable(tabela);
 
-        const formattedColumns = Object.entries(columns).map(([name, details]) => ({
+        const formattedColumns = Object.entries(columns).map(([name, details]) => {
+            const isEnum = details.type.toLowerCase().startsWith('enum');
+            return {
             name,
             allowNull: details.allowNull,
             defaultValue: details.defaultValue,
             type: details.type,
             length: details.type.match(/\((\d+)\)/)?.[1] || null,
-        }));
+            enumValues: isEnum ? details.special : null,
+            };
+        });
 
         const permitted = await permittedColumns(tabela);
         const required = await requiredColumns(tabela);
