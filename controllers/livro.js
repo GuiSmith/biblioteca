@@ -1,34 +1,47 @@
 import '../models/relacionamentos.js';
+
+// Modelos
 import livro from '../models/livro.js';
+import Categoria from '../models/categoria.js';
+
+// Controladores
 import livroAutor from './livroAutor.js';
 import util from './util.js';
 
-const tabela = 'livro';
-
 const listar = async (req, res) => {
-    const dados = await livro.findAll({
-        include: [
-            { model: livro.sequelize.models.categoria, as: 'categoria' }
-        ]
-    });
-    const statusCode = dados.length > 0 ? 200 : 204;
-    res.status(statusCode).json(dados);
+    await livro.findAll()
+        .then(result => res.status(result ? 200 : 204).json(result))
+        .catch(err => res.status(400).json({
+            mensagem: "Erro ao listar livros",
+            erro: err
+        }));
 }
 
 const selecionar = async (req, res) => {
-    await livro.findByPk(req.params.id)
-        .then(result => {
-            const statusCode = result ? 200 : 204;
-            res.status(statusCode).json(result);
-        })
-        .catch(err => res.status(400).json(err));
+    // Verifica se foi informado um ID
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id = req.params.id;
+    // Verifica se o ID é um número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({ mensagem: "ID inválido" });
+    }
+    // Buscando o livro
+    await livro.findByPk(id)
+        .then(result => res.status(result ? 200 : 204).json(result))
+        .catch(err => res.status(400).json({
+            mensagem: "Erro ao buscar livro",
+            erro: err
+        }));
 }
 
 const inserir = async (req, res) => {
-    const requiredColumns = await util.requiredColumns(tabela);
-    const permittedColumns = await util.permittedColumns(tabela);
+    // Filtrando dados
+    const requiredColumns = await util.requiredColumns(livro.getTableName());
+    const permittedColumns = await util.permittedColumns(livro.getTableName());
     const data = util.filterObjectKeys(req.body, permittedColumns);
-    if (!util.keysMatch(data, requiredColumns) === false) {
+    if (!util.keysMatch(data, requiredColumns)) {
         return res.status(400).json({
             mensagem: "Dados obrigatórios não informados",
             obrigatorios: requiredColumns,
@@ -36,19 +49,42 @@ const inserir = async (req, res) => {
         });
     }
     console.log(data);
+    
     // Verifica se a categoria existe
-    const categoriaExistente = await livro.sequelize.models.categoria.findByPk(data.id_categoria);
+    const categoriaExistente = await Categoria.findByPk(data.id_categoria);
     if (!categoriaExistente) {
         return res.status(404).json({ mensagem: "Categoria não encontrada" });
     }
-    await livro.create(req.body)
-        .then(result => res.status(201).json(result))
-        .catch(err => res.status(500).json(err));
+    
+    await livro.create(data)
+        .then(result => res.status(201).json({
+            mensagem: "Livro inserido com sucesso",
+            livro: result
+        }))
+        .catch(err => res.status(500).json({
+            mensagem: "Erro ao inserir livro",
+            erro: err
+        }));
 }
 
 const alterar = async (req, res) => {
-    const permittedColumns = await util.permittedColumns(tabela);
-    const data = util.filterObjectKeys(req.body, [...permittedColumns, 'id']);
+    // Verifica se foi informado um ID
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id = req.params.id;
+    // Verifica se o ID é um número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({ mensagem: "ID inválido" });
+    }
+    // Verifica se o ID existe
+    const livroExistente = await livro.findByPk(id);
+    if (!livroExistente) {
+        return res.status(404).json({ mensagem: "Livro não encontrado" });
+    }
+    // Filtrando dados
+    const permittedColumns = await util.permittedColumns(livro.getTableName());
+    const data = util.filterObjectKeys(req.body, permittedColumns);
     if (Object.keys(data).length == 0) {
         return res.status(400).json({
             mensagem: "Nenhum dado informado para atualização",
@@ -56,75 +92,55 @@ const alterar = async (req, res) => {
             informados: Object.keys(data)
         });
     }
-    // Verifica se o ID é um número
-    if (!util.isNumber(req.params.id)) {
-        return res.status(400).json({ mensagem: "ID inválido" });
-    }
-    // Verifica se o ID existe
-    const livroExistente = await livro.findByPk(req.params.id);
-    if (!livroExistente) {
-        return res.status(404).json({ mensagem: "Livro não encontrado" });
-    }
+    
     // Verifica se a categoria existe
-    const categoriaExistente = await livro.sequelize.models.categoria.findByPk(data.id_categoria);
-    if (!categoriaExistente) {
-        return res.status(404).json({ mensagem: "Categoria não encontrada" });
-    }
-    // Atualiza o livro
-    await livro.update(req.body, {
-        where: {
-            id: req.params.id
+    if(data.id_categoria) {
+        const categoriaExistente = await Categoria.findByPk(data.id_categoria);
+        if (!categoriaExistente) {
+            return res.status(404).json({ mensagem: "Categoria não encontrada" });
         }
+    }
+    console.log(data);
+    // Atualiza o livro
+    await livro.update(data, {
+        where: { id }
     })
-        .then(result => res.status(200).json(result))
-        .catch(err => res.status(400).json(err));
+        .then(result => res.status(200).json({
+            mensagem: "Livro atualizado com sucesso",
+        }))
+        .catch(err => res.status(400).json({
+            mensagem: "Erro ao atualizar livro",
+            erro: err
+        }));
 }
 
 const excluir = async (req, res) => {
+    // Verifica se foi informado um ID
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id = req.params.id;
     // Verifica se o ID é um número
-    if (!util.isNumber(req.params.id)) {
+    if (!util.isNumber(id)) {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
-    const livroExistente = await livro.findByPk(req.params.id);
+    const livroExistente = await livro.findByPk(id);
     if (!livroExistente) {
         return res.status(404).json({ mensagem: "Livro não encontrado" });
     }
     // Exclui o livro
     await livro.destroy({
-        where: { id: req.params.id }
+        where: { id }
     })
-        .then(result => res.status(200).json(result))
-        .catch(err => res.status(400).json(err));
+        .then(result => res.status(200).json({
+            mensagem: "Livro excluído com sucesso",
+        }))
+        .catch(err => res.status(400).json({
+            mensagem: "Erro ao excluir livro",
+            erro: err
+        }));
 }
 
-const inserirLivroAutor = async (req, res) => {
-    const id_livro = req.params.id;
-    const id_autor = req.body.id_autor;
-    const response = await livroAutor.inserir({ id_livro, id_autor });
-    const status = response.status;
-    delete response.status;
-    res.status(status).json(response);
-};
 
-const alterarLivroAutor = async (req, res) => {
-    const { id, id_livro, id_autor } = req.body;
-    const response = await livroAutor.alterar({id, id_livro, id_autor});
-
-    const status = response.status;
-    delete response.status;
-
-    res.status(status).json(response);
-};
-
-const excluirLivroAutor = async (req, res) => {
-    const { id } = req.body;
-    const response = await livroAutor.excluir({ id });
-
-    const status = response.status;
-    delete response.status;
-
-    res.status(status).json(response);
-}
-
-export default { listar, selecionar, inserir, alterar, excluir, inserirLivroAutor, alterarLivroAutor, excluirLivroAutor };
+export default { listar, selecionar, inserir, alterar, excluir };

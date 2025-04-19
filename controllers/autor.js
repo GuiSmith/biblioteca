@@ -4,29 +4,39 @@ import util from './util.js';
 const tabela = 'autor';
 
 const listar = async (req, res) => {
-    const dados = await autor.findAll();
-    const statusCode = dados.length > 0 ? 200 : 204;
-    res.status(statusCode).json(dados);
+    await autor.findAll()
+        .then(result => res.status(result.length > 0 ? 200 : 204).json(result))
+        .catch(err => res.status(500).json({
+            mensagem: `Erro ao listar autores`,
+            erro: err
+        }));
 }
 
 const selecionar = async (req, res) => {
-
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
     // Verifica se o ID é um número
     if (!util.isNumber(req.params.id)) {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
+    // Seleciona o autor
     await autor.findByPk(req.params.id)
-        .then(result => {
-            const statusCode = result ? 200 : 204;
-            res.status(statusCode).json(result);
-        })
-        .catch(err => res.status(500).json(err));
+        .then(result => res.status(result ? 200 : 204).json(result))
+        .catch(err => res.status(500).json({
+            mensagem: `Erro ao selecionar autor`,
+            erro: err
+        }));
 }
 
 const inserir = async (req, res) => {
+    // Filtrando dados
     const requiredColumns = await util.requiredColumns(tabela);
     const permittedColumns = await util.permittedColumns(tabela);
     const data = util.filterObjectKeys(req.body, permittedColumns);
+    
+    // Verificando se os dados obrigatórios foram informados
     if(util.keysMatch(data, requiredColumns) === false) {
         return res.status(400).json({
             mensagem: "Dados obrigatórios não informados",
@@ -34,22 +44,27 @@ const inserir = async (req, res) => {
             informados: Object.keys(data)
         });
     }
+
+    // Criando o autor
     console.log(data);
     await autor.create(data)
-        .then(result => res.status(201).json(result))
-        .catch(err => res.status(500).json(err));
+        .then(result => res.status(201).json({
+            mensagem: `Autor ${result.nome} inserido com sucesso`,
+            autor: result
+        }))
+        .catch(err => res.status(500).json({
+            mensagem: `Erro ao inserir autor`,
+            erro: err
+        }));
 }
 
 const alterar = async (req, res) => {
-    const permittedColumns = await util.permittedColumns(tabela);
-    const data = util.filterObjectKeys(req.body, [...permittedColumns, 'id']);
-    if(Object.keys(data).length == 0){
-        return res.status(400).json({
-            mensagem: "Nenhum dado informado para atualização",
-            permitidos: permittedColumns,
-            informados: Object.keys(data)
-        });
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
     }
+    const id = req.params.id;
+
     // Verifica se o ID é um número
     if (!util.isNumber(req.params.id)) {
         return res.status(400).json({ mensagem: "ID inválido" });
@@ -59,11 +74,21 @@ const alterar = async (req, res) => {
     if (!autorExistente) {
         return res.status(404).json({ mensagem: "Autor não encontrado" });
     }
+
+    // Filtrando dados
+    const permittedColumns = await util.permittedColumns(tabela);
+    const data = util.filterObjectKeys(req.body, permittedColumns);
+    if(Object.keys(data).length == 0){
+        return res.status(400).json({
+            mensagem: "Nenhum dado informado para atualização",
+            permitidos: permittedColumns,
+            informados: Object.keys(data)
+        });
+    }
+
     // Atualiza os dados
-    await autor.update(req.body, {
-        where: {
-            id: req.params.id
-        }
+    await autor.update(data, {
+        where: { id }
     })
         .then(result => res.status(200).json({
             mensagem: `Autor atualizado com sucesso`,
@@ -75,18 +100,23 @@ const alterar = async (req, res) => {
 }
 
 const excluir = async (req, res) => {
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id = req.params.id;
     // Verifica se o ID é um número
-    if (!util.isNumber(req.params.id)) {
+    if (!util.isNumber(id)) {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
-    const autorExistente = await autor.findByPk(req.params.id);
+    const autorExistente = await autor.findByPk(id);
     if (!autorExistente) {
         return res.status(404).json({ mensagem: "Autor não encontrado" });
     }
     // Exclui o autor
     await autor.destroy({
-        where: { id: req.params.id }
+        where: { id }
     })
         .then(result => res.status(200).json({
             mensagem: `Autor excluído com sucesso`

@@ -1,229 +1,232 @@
 import '../models/relacionamentos.js';
+
+// Modelos
 import livroAutor from "../models/livro_autor.js";
 import Livro from "../models/livro.js";
 import Autor from "../models/autor.js";
+
+// Controladores
 import util from './util.js';
-import LivroAutor from '../models/livro_autor.js';
 
-const tabela = 'livro_autor';
-
-const listarLivros = async (id_autor) => {
-    const livros = await livroAutor.findAll({
-        where: { id_autor: id_autor },
-        include: [{
-            model: Livro,
-            as: "livro",
-        }],
-    });
+const listarLivros = async (req, res) => {
+    // Verifica se foi informado um ID
+    if (!req.params.id_autor) {
+        res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id_autor = req.params.id_autor;
 
     const autor = await Autor.findByPk(id_autor);
 
-    return {
+    const livros = await livroAutor.findAll({
+        where: { id_autor },
+        include: [{
+            model: Livro,
+            as: 'livro',
+        }],
+    });
+
+    res.status(livros ? 200 : 204).json({
         autor: autor.dataValues,
         livros: livros.map((livro) => ({
             ...livro.livro.dataValues,
-            livro_autor: {
-                id: livro.id,
-                id_autor: livro.id_autor,
-                id_livro: livro.id_livro
-            }
         })),
-    }
+    });
 };
 
-const listarAutores = async (id_livro) => {
+const listarAutores = async (req, res) => {
+    // Verifica se foi informado um ID
+    if(!req.params.id_livro){
+        res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id_livro = req.params.id_livro;
+
+    const livro = await Livro.findByPk(id_livro);
+
     const autores = await livroAutor.findAll({
-        where: { id_livro: id_livro },
+        where: { id_livro },
         include: [{
             model: Autor,
             as: 'autor',
         }],
     });
 
-    const livro = await Livro.findByPk(id_livro);
-
-    return {
+    res.status(autores ? 200 : 204).json({
         livro: livro.dataValues,
         autores: autores.map((autor) => ({
             ...autor.autor.dataValues,
-            livro_autor: {
-                id: autor.id,
-                id_autor: autor.id_autor,
-                id_livro: autor.id_livro,
-            }
         }))
-    };
+    });
 }
 
-const selecionar = async (id) => {
-    const registro = await livroAutor.findByPk(id);
-    return registro.dataValues;
-}
+const inserir = async (req, res) => {
 
-const inserir = async ({ id_autor, id_livro }) => {
+    // Filtrando dados
+    const requiredColumns = await util.requiredColumns(livroAutor.getTableName());
+    const permittedColumns = await util.permittedColumns(livroAutor.getTableName());
+    const data = util.filterObjectKeys(req.body, permittedColumns);
+    if (!util.keysMatch(data, requiredColumns)) {
+        res.status(400).json({
+            mensagem: "Dados obrigatórios não informados",
+            obrigatorios: requiredColumns,
+            informados: Object.keys(data)
+        });
+    }
+
     // Valida se ID de livro passado é número
-    if (!util.isNumber(id_livro)) {
-        return {
-            status: 400,
-            mensagem: `ID de livro ${id_livro} não é do tipo número!`
-        }
+    if (!util.isNumber(data.id_livro)) {
+        return res.status(400).json({
+            mensagem: `ID de livro ${data.id_livro} não é do tipo número!`
+        });
     }
 
     // Valida se livro existe
-    const livroExistente = await Livro.findByPk(id_livro);
+    const livroExistente = await Livro.findByPk(data.id_livro);
     if (!livroExistente) {
-        return {
-            status: 400,
-            mensagem: `Livro ID ${id_livro} não encontrado!`
-        }
+        return res.status(400).json({
+            mensagem: `Livro ID ${data.id_livro} não encontrado!`
+        });
     }
 
     // Valida se ID de autor passado é número
-    if (!util.isNumber(id_autor)) {
-        return {
-            status: 400,
-            mensagem: `ID de autor ${id_autor} não é do tipo número!`
-        };
+    if (!util.isNumber(data.id_autor)) {
+        return res.status(400).json({
+            mensagem: `ID de autor ${data.id_autor} não é do tipo número!`
+        });
     }
 
     // Valida se autor existe
-    const autorExistente = Autor.findByPk(id_autor);
+    const autorExistente = Autor.findByPk(data.id_autor);
     if (!autorExistente) {
-        return {
-            status: 400,
-            mensagem: `Autor ID ${id_autor} não encontrado!`
-        };
+        return res.status(400).json({
+            mensagem: `Autor ID ${data.id_autor} não encontrado!`
+        });
     }
 
     // Valida se já não existe vínculo
-    const livroAutorExistente = await LivroAutor.findOne({
+    const livroAutorExistente = await livroAutor.findOne({
         where: {
-            id_livro, id_autor
+            id_livro: data.id_livro,
+            id_autor: data.id_livro
         }
     });
     if (livroAutorExistente) {
-        return {
-            status: 400,
+        return res.status(409).json({
             mensagem: `Já possui vínculo entre este autor e livro!`
-        };
+        });
     }
 
-    return await livroAutor.create({ id_livro, id_autor })
-        .then(result => ({
-            status: 201,
-            ...result.dataValues
-        }))
-        .catch(err => ({
-            status: 500,
-            ...err
+    return await livroAutor.create(data)
+        .then(result => 
+            res.status(201).json({
+                mensagem: `Vínculo inserido com sucesso`,
+                livroAutor: result
+            })
+        )
+        .catch(err => res.status(500).json({
+            mensagem: `Houve um erro ao inserir vínculo `,
+            erro: err
         }));
 };
 
-const alterar = async ({ id, id_autor, id_livro }) => {
+const alterar = async (req, res) => {
+    // Verifica se foi informado um ID
+    if (!req.params.id) {
+        return res.status(400).json({ mensagem: "ID não informado" });
+    }
+    const id = req.params.id;
+
     // Valida se ID passado é do tipo número
     if (!util.isNumber(id)) {
-        return {
-            status: 400,
-            mensagem: `ID ${id} não é do tipo número: ${typeof (id)}`
-        };
+        return res.status(400).json({ mensagem: `ID ${id} não é do tipo número: ${typeof (id)}` });
     }
 
     // Valida se existe ID passado
     const livroAutorExistente = await livroAutor.findByPk(id);
     if (!livroAutorExistente) {
-        return {
-            status: 400,
-            mensagem: `Vínculo ID ${id} não existe!`
-        };
+        return res.status(400).json({ mensagem: `Vínculo com ID ${id} não existe` });
     }
 
+    // Filtrando dados
+    const requiredColumns = await util.requiredColumns(livroAutor.getTableName());
+    const data = util.filterObjectKeys(req.body, requiredColumns);
+
     // Valida se ID de livro passado é número
-    if (!util.isNumber(id_livro)) {
-        return {
-            status: 400,
-            mensagem: `ID de livro ${id_livro} não é do tipo número!`
-        }
+    if (!util.isNumber(data.id_livro)) {
+        return res.status(400).json({ mensagem: `ID de livro ${data.id_livro} não é do tipo número!` });
     }
 
     // Valida se livro existe
-    const livroExistente = await Livro.findByPk(id_livro);
+    const livroExistente = await Livro.findByPk(data.id_livro);
     if (!livroExistente) {
-        return {
-            status: 400,
-            mensagem: `Livro ID ${id_livro} não encontrado!`
-        }
+        return res.status(400).json({ mensagem: `Livro ID ${data.id_livro} não encontrado!` });
     }
 
     // Valida se ID de autor passado é número
-    if (!util.isNumber(id_autor)) {
-        return {
-            status: 400,
-            mensagem: `ID de autor ${id_autor} não é do tipo número!`
-        };
+    if (!util.isNumber(data.id_autor)) {
+        return res.status(400).json({ mensagem: `ID de autor ${data.id_autor} não é do tipo número!` });
     }
 
     // Valida se autor existe
-    const autorExistente = Autor.findByPk(id_autor);
+    const autorExistente = await Autor.findByPk(data.id_autor);
     if (!autorExistente) {
-        return {
-            status: 400,
-            mensagem: `Autor ID ${id_autor} não encontrado!`
-        };
+        return res.status(400).json({ mensagem: `Autor ID ${data.id_autor} não encontrado!` });
     }
 
     // Valida se já não existe vínculo
-    const outroLivroAutorExistente = await LivroAutor.findOne({
+    const outroLivroAutorExistente = await livroAutor.findOne({
         where: {
-            id_livro, id_autor
+            id_livro: data.id_livro,
+            id_autor: data.id_autor
         }
     });
 
     if (outroLivroAutorExistente && outroLivroAutorExistente.dataValues.id !== livroAutorExistente.dataValues.id) {
-        return {
-            status: 400,
-            mensagem: `Já possui vínculo entre este autor e livro no ID ${outroLivroAutorExistente.dataValues.id}`
-        };
+        res.status(409).json({
+            mensagem: `Já existe vínculo entre este autor e livro!`
+        });
     }
 
+    console.log(data);
+
     // Atualiza o livroAutor
-    return await livroAutor.update({ id_autor, id_livro }, { where: { id } })
-        .then(result => ({
-            status: 200,
-            mensagem: ` ${result[0]} linhas alteradas`
-        }))
-        .catch(err => ({
-            status: 500,
-            ...err
+    return await livroAutor.update(data, { where: { id } })
+        .then(result => res.status(200).json({ mensagem: `Vínculo atualizado com sucesso` }))
+        .catch(err => res.status(500).json({
+            mensagem: `Houve um erro ao atualizar vínculo`,
+            erro: err
         }));
 };
 
-const excluir = async ({ id }) => {
-    // Valida se id passado é número
-    if (!util.isNumber(id)) {
-        console.log(id);
+const excluir = async (req, res) => {
+    // Verifica se foi informado um ID
+    if (!req.params.id) {
         return {
             status: 400,
-            mensagem: `ID ${id} não é um número`,
+            mensagem: "ID não informado",
         };
     }
+    const id = req.params.id;
+    // Valida se id passado é número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({ mensagem: `ID ${id} não é do tipo número: ${typeof (id)}` });
+    }
+
     // Valida se existe um registro com o id passado
     const livroAutorExistente = await livroAutor.findByPk(id);
     if (!livroAutorExistente) {
-        return {
-            status: 400,
-            mensagem: `Vínculo com ID ${id} não existe`,
-        };
+        return res.status(400).json({ mensagem: `Vínculo com ID ${id} não existe` });
     }
 
     return await livroAutor.destroy({ where: { id: id } })
-        .then(result => ({
-            status: result > 0 ? 200 : 204,
-            mensagem: `${result} vínculos deletados`,
+        .then(result => res.status(200).json({
+            mensagem: `Vínculo excluído com sucesso`,
         }))
-        .catch(err => ({
-            status: 500,
-            mensagem: `Houve um erro ao deletar vínculo: ${err}`,
+        .catch(err => res.status(500).json({
+            mensagem: `Houve um erro ao excluir vínculo`,
+            erro: err
         }));
 };
 
-export default { selecionar, inserir, alterar, excluir, listarAutores, listarLivros, tabela };
+// export default { selecionar, inserir, alterar, excluir, listarAutores, listarLivros };
+
+export default { inserir, alterar, excluir, listarLivros, listarAutores };

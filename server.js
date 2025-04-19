@@ -5,6 +5,7 @@ import util from './controllers/util.js';
 import categoria from "./controllers/categoria.js";
 import autor from './controllers/autor.js';
 import livro from './controllers/livro.js';
+import livroAutor from './controllers/livroAutor.js';
 
 const app = express();
 app.use(express.json());
@@ -40,8 +41,10 @@ app.put('/livro/:id', livro.alterar);
 app.delete('/livro/:id', livro.excluir);
 
 // Livro autor
-app.post('/livro/:id/autores', livro.inserirLivroAutor);
-app.put('/livro/:id/autores', livro.alterarLivroAutor);
-app.delete('/livro/:id/autores', livro.excluirLivroAutor);
+app.get('/livro_autor/livros/:id_autor', livroAutor.listarLivros);
+app.get('/livro_autor/autores/:id_livro', livroAutor.listarAutores);
+app.post('/livro_autor', livroAutor.inserir);
+app.put('/livro_autor/:id', livroAutor.alterar);
+app.delete('/livro_autor/:id', livroAutor.excluir);
 
 app.listen(5000, () => console.log("API rodando na porta 5000"));
