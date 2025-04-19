@@ -10,6 +10,8 @@ import livroAutor from './controllers/livroAutor.js';
 const app = express();
 app.use(express.json());
 
+const PORT = process.env.PORT || 5000;
+
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
@@ -47,4 +49,4 @@ app.post('/livro_autor', livroAutor.inserir);
 app.put('/livro_autor/:id', livroAutor.alterar);
 app.delete('/livro_autor/:id', livroAutor.excluir);
 
-app.listen(5000, () => console.log("API rodando na porta 5000"));
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
