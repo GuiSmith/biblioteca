@@ -95,7 +95,9 @@ const filterObjectKeys = (obj, array) => {
 
 const keysMatch = (obj, array) => {
     for (const key of array) {
-        if (!obj.hasOwnProperty(key)) return false;
+        if (!obj.hasOwnProperty(key)) {
+            return false;
+        }
     }
     return true;
 }
