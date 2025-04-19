@@ -21,15 +21,15 @@ const tabelas = async (req, res) => {
 
 const colunas = async (req, res) => {
     try {
-        const { table } = req.params;
-        if (!table) {
+        const { tabela } = req.params;
+        if (!tabela) {
             return res.status(400).json({
-                ok: false,
                 message: 'Nome da tabela não fornecido',
+                params: req.params
             });
         }
 
-        const columns = await sequelize.getQueryInterface().describeTable(table);
+        const columns = await sequelize.getQueryInterface().describeTable(tabela);
 
         const formattedColumns = Object.entries(columns).map(([name, details]) => ({
             name,
@@ -39,16 +39,19 @@ const colunas = async (req, res) => {
             length: details.type.match(/\((\d+)\)/)?.[1] || null,
         }));
 
+        const permitted = await permittedColumns(tabela);
+        const required = await requiredColumns(tabela);
+
         res.status(200).json({
-            ok: true,
-            message: 'Lista de colunas',
-            columns: formattedColumns,
+            mensagem: 'Lista de colunas',
+            permitidas: permitted,
+            obrigatorias: required,
+            colunas: formattedColumns,
         });
     } catch (error) {
         res.status(500).json({
-            ok: false,
             message: 'Erro ao listar colunas',
-            error: error.message,
+            error: error,
         });
     }
 };
@@ -113,7 +116,5 @@ const httpCodes = {
     conflict: 409,
     server_error: 500
 };
-
-
 
 export default { tabelas, colunas, requiredColumns, permittedColumns, isNumber, filterObjectKeys, keysMatch };
