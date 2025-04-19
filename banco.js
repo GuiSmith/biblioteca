@@ -16,6 +16,8 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
         timestamps: false,
         freezeTableName: true
     }
-})
+});
+
+console.log(sequelize);
 
 export default sequelize;
