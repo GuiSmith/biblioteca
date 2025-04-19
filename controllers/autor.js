@@ -65,8 +65,13 @@ const alterar = async (req, res) => {
             id: req.params.id
         }
     })
-        .then(result => res.status(200).json(result))
-        .catch(err => res.status(400).json(err));
+        .then(result => res.status(200).json({
+            mensagem: `Autor atualizado com sucesso`,
+        }))
+        .catch(err => res.status(400).json({
+            mensagem: `Erro ao atualizar autor`,
+            erro: err
+        }));
 }
 
 const excluir = async (req, res) => {
@@ -83,8 +88,13 @@ const excluir = async (req, res) => {
     await autor.destroy({
         where: { id: req.params.id }
     })
-        .then(result => res.status(200).json(result))
-        .catch(err => res.status(500).json(err));
+        .then(result => res.status(200).json({
+            mensagem: `Autor excluído com sucesso`
+        }))
+        .catch(err => res.status(500).json({
+            mensagem: `Erro ao excluir autor`,
+            erro: err
+        }));
 }
 
 export default { listar, selecionar, inserir, alterar, excluir };
