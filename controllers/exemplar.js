@@ -46,6 +46,9 @@ const selecionar = async (req, res) => {
 }
 
 const inserir = async (req, res) => {
+
+    const quantidade = parseInt(req.body.quantidade) || 1;
+    delete req.body.quantidade;
     // Filtrando dados
     const requiredColumns = await util.requiredColumns(Exemplar.getTableName());
     const permittedColumns = await util.permittedColumns(Exemplar.getTableName());
@@ -60,11 +63,40 @@ const inserir = async (req, res) => {
         });
     }
 
-    console.log(data);
+    // Verificar se livro existe
 
-    await Exemplar.create(data)
-        .then(result => res.status(201).json(result))
-        .catch(err => res.status(500).json(err));
+    const livro = await Livro.findByPk(data.id_livro);
+    
+    if(!livro){
+        return res.status(404).json({
+            mensagem: `Livro com ID ${data.id_livro} não encontrado!`
+        });
+    }
+
+    const transaction = await Exemplar.sequelize.transaction();
+
+    console.log('dados', data);
+    console.log('quantidade', quantidade);
+
+    try {
+        const exemplares = [];
+        for (let i = 0; i < quantidade; i++){
+            const exemplar = await Exemplar.create(data, { transaction});
+            exemplares.push(exemplar);
+        }
+
+        await transaction.commit();
+        return res.status(201).json({
+            mensagem: 'Exemplares cadastrados com sucesso!',
+            exemplar: exemplares,
+        });
+    } catch (error) {
+        await transaction.rollback();
+        return res.status(500).json({
+            mensagem: 'Erro ao cadastrar exemplares',
+            erro: error,
+        });
+    }
 }
 
 export default { listar, selecionar, inserir };
