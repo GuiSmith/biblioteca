@@ -59,7 +59,7 @@ app.put('/livro_autor/:id', livroAutor.alterar);
 app.delete('/livro_autor/:id', livroAutor.excluir);
 
 // Exemplar
-app.get('/exemplar', exemplar.listar);
+app.get('/exemplar/:id', exemplar.selecionar);
 app.post('/exemplar', exemplar.inserir);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
