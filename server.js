@@ -47,6 +47,7 @@ app.delete('/autor/:id', autor.excluir);
 // Livro
 app.get('/livro', livro.listar);
 app.get('/livro/:id', livro.selecionar);
+app.get('/livro/:id_livro/exemplares', livro.listarExemplares);
 app.post('/livro', livro.inserir);
 app.put('/livro/:id', livro.alterar);
 app.delete('/livro/:id', livro.excluir);
@@ -62,5 +63,6 @@ app.delete('/livro_autor/:id', livroAutor.excluir);
 app.get('/exemplar/:id', exemplar.selecionar);
 app.post('/exemplar', exemplar.inserir);
 app.put('/exemplar/:id', exemplar.alterar);
+app.delete('/exemplar/:id', exemplar.excluir);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
