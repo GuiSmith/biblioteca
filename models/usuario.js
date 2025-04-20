@@ -10,7 +10,6 @@ const Usuario = sequelize.define('usuario', {
     },
     ativo: {
         type: DataTypes.BOOLEAN,
-        allowNull: false,
         defaultValue: true
     },
     nome: {
