@@ -9,7 +9,12 @@ const Exemplar = sequelize.define('exemplar', {
         primaryKey: true
     },
     condicao_fisica: {
-        type: DataTypes.ENUM('Novo', 'Usado', 'Danificado', 'Recondicionado'), // Novo, Usado, Danificado, Recondicionado
+        type: DataTypes.ENUM(
+                'Novo',
+                'Usado',
+                'Danificado',
+                'Recondicionado'
+            ),
         allowNull: false,
         defaultValue: 'Novo',
     },
@@ -26,9 +31,16 @@ const Exemplar = sequelize.define('exemplar', {
         allowNull: true
     },
     situacao: {
-        type: DataTypes.ENUM('Disponível','Emprestado','Manutenção','Perdido','Vendido','Inutilizado'), // Disponível, Emprestado, Manutenção, Perdido, Vendido, Inutilizado
+        type: DataTypes.ENUM(
+            'Disponível',
+            'Emprestado',
+            'Manutenção',
+            'Perdido',
+            'Vendido',
+            'Inutilizado'
+        ),
         allowNull: false,
-        defaultValue: 'Disponivel'
+        defaultValue: 'Disponível'
     },
     observacoes: {
         type: DataTypes.TEXT,
