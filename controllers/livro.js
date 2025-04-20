@@ -1,15 +1,16 @@
 import '../models/relacionamentos.js';
 
 // Modelos
-import livro from '../models/livro.js';
+import Livro from '../models/livro.js';
 import Categoria from '../models/categoria.js';
+import Exemplar from '../models/exemplar.js';
 
 // Controladores
 import livroAutor from './livroAutor.js';
 import util from './util.js';
 
 const listar = async (req, res) => {
-    await livro.findAll()
+    await Livro.findAll()
         .then(result => res.status(result ? 200 : 204).json(result))
         .catch(err => res.status(400).json({
             mensagem: "Erro ao listar livros",
@@ -28,7 +29,7 @@ const selecionar = async (req, res) => {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Buscando o livro
-    await livro.findByPk(id)
+    await Livro.findByPk(id)
         .then(result => res.status(result ? 200 : 204).json(result))
         .catch(err => res.status(400).json({
             mensagem: "Erro ao buscar livro",
@@ -38,8 +39,8 @@ const selecionar = async (req, res) => {
 
 const inserir = async (req, res) => {
     // Filtrando dados
-    const requiredColumns = await util.requiredColumns(livro.getTableName());
-    const permittedColumns = await util.permittedColumns(livro.getTableName());
+    const requiredColumns = await util.requiredColumns(Livro.getTableName());
+    const permittedColumns = await util.permittedColumns(Livro.getTableName());
     const data = util.filterObjectKeys(req.body, permittedColumns);
     if (!util.keysMatch(data, requiredColumns)) {
         return res.status(400).json({
@@ -56,7 +57,7 @@ const inserir = async (req, res) => {
         return res.status(404).json({ mensagem: "Categoria não encontrada" });
     }
     
-    await livro.create(data)
+    await Livro.create(data)
         .then(result => res.status(201).json({
             mensagem: "Livro inserido com sucesso",
             livro: result
@@ -78,12 +79,12 @@ const alterar = async (req, res) => {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
-    const livroExistente = await livro.findByPk(id);
+    const livroExistente = await Livro.findByPk(id);
     if (!livroExistente) {
         return res.status(404).json({ mensagem: "Livro não encontrado" });
     }
     // Filtrando dados
-    const permittedColumns = await util.permittedColumns(livro.getTableName());
+    const permittedColumns = await util.permittedColumns(Livro.getTableName());
     const data = util.filterObjectKeys(req.body, permittedColumns);
     if (Object.keys(data).length == 0) {
         return res.status(400).json({
@@ -102,7 +103,7 @@ const alterar = async (req, res) => {
     }
     console.log(data);
     // Atualiza o livro
-    await livro.update(data, {
+    await Livro.update(data, {
         where: { id }
     })
         .then(result => res.status(200).json({
@@ -125,12 +126,12 @@ const excluir = async (req, res) => {
         return res.status(400).json({ mensagem: "ID inválido" });
     }
     // Verifica se o ID existe
-    const livroExistente = await livro.findByPk(id);
+    const livroExistente = await Livro.findByPk(id);
     if (!livroExistente) {
         return res.status(404).json({ mensagem: "Livro não encontrado" });
     }
     // Exclui o livro
-    await livro.destroy({
+    await Livro.destroy({
         where: { id }
     })
         .then(result => res.status(200).json({
@@ -142,5 +143,32 @@ const excluir = async (req, res) => {
         }));
 }
 
+const listarExemplares = async (req, res) => {
+    // Verifica se foi informado um ID
+    if (!req.params.id_livro) {
+        return res.status(400).json({ mensagem: "ID de livro não informado" });
+    }
+    const id_livro = req.params.id_livro;
+    // Verifica se o id_livro é um número
+    if (!util.isNumber(id_livro)) {
+        return res.status(400).json({ mensagem: "ID de livro não é um número" });
+    }
+    // Verifica se o ID existe
+    const livro = await Livro.findByPk(id_livro);
+    if (!livro) {
+        return res.status(404).json({ mensagem: `Livro não encontrado com ID ${id_livro}` });
+    }
+    
+    // Verifica se o livro possui exemplares
+    const exemplares = await Exemplar.findAll({
+        where: { id_livro },
+    });
 
-export default { listar, selecionar, inserir, alterar, excluir };
+    return res.status(exemplares.length > 0 ? 200 : 204).json({
+        livro: livro.dataValues,
+        exemplares: exemplares.map(exemplar => exemplar.dataValues)
+    });
+}
+
+
+export default { listar, selecionar, listarExemplares, inserir, alterar, excluir };
