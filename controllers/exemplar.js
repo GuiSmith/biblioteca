@@ -85,4 +85,54 @@ const inserir = async (req, res) => {
     }
 }
 
-export default { selecionar, inserir };
+const alterar = async (req, res) => {
+
+    if(!req.params.id){
+        return res.status(400).json({
+            mensagem: 'ID do exemplar não informado!'
+        });
+    }
+
+    const id = req.params.id;
+
+    // Testa se ID é número
+    if(!util.isNumber(id)){
+        return res.status(400).json({
+            mensagem: `ID ${id} não é um número!`,
+        });
+    }
+
+    // Verifica se exemplar existe
+    const exemplar = await Exemplar.findByPk(id);
+
+    if(!exemplar){
+        return res.status(404).json({
+            mensagem: `Exemplar com ID ${id} não encontrado!`
+        });
+    }
+
+    // Filtrando dados
+    const permittedColumns = await util.permittedColumns(Exemplar.getTableName());
+
+    delete permittedColumns.id_livro;
+
+    const data = util.filterObjectKeys(req.body, permittedColumns);
+
+    try {
+        await Exemplar.update(data, {
+            where: { id }
+        });
+
+        return res.status(200).json({
+            mensagem: 'Exemplar atualizado com sucesso!',
+            exemplar: data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: 'Erro ao atualizar exemplar',
+            erro: error,
+        });
+    }
+}
+
+export default { selecionar, inserir, alterar };
