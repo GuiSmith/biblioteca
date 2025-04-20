@@ -8,6 +8,11 @@ const Usuario = sequelize.define('usuario', {
         allowNull: false,
         primaryKey: true
     },
+    ativo: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    },
     nome: {
         type: DataTypes.STRING(100),
         allowNull: false,
