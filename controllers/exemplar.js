@@ -135,4 +135,45 @@ const alterar = async (req, res) => {
     }
 }
 
-export default { selecionar, inserir, alterar };
+const excluir = async (req, res) => {
+    if(!req.params.id){
+        return res.status(400).json({
+            mensagem: 'ID do exemplar não informado!'
+        });
+    }
+
+    const id = req.params.id;
+
+    // Testa se ID é número
+    if(!util.isNumber(id)){
+        return res.status(400).json({
+            mensagem: `ID ${id} não é um número!`,
+        });
+    }
+
+    // Verifica se exemplar existe
+    const exemplar = await Exemplar.findByPk(id);
+
+    if(!exemplar){
+        return res.status(404).json({
+            mensagem: `Exemplar com ID ${id} não encontrado!`
+        });
+    }
+
+    try {
+        await Exemplar.destroy({
+            where: { id }
+        });
+
+        return res.status(200).json({
+            mensagem: 'Exemplar excluído com sucesso!',
+        });
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: 'Erro ao excluir exemplar',
+            erro: error,
+        });
+    }
+}
+
+export default { selecionar, inserir, alterar, excluir };
