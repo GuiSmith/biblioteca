@@ -20,6 +20,7 @@ import autor from './controllers/autor.js';
 import livro from './controllers/livro.js';
 import livroAutor from './controllers/livroAutor.js';
 import exemplar from './controllers/exemplar.js';
+import usuario from './controllers/usuario.js';
 
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
@@ -64,5 +65,11 @@ app.get('/exemplar/:id', exemplar.selecionar);
 app.post('/exemplar', exemplar.inserir);
 app.put('/exemplar/:id', exemplar.alterar);
 app.delete('/exemplar/:id', exemplar.excluir);
+
+// Usuário
+app.get('/usuario', usuario.listar);
+app.get('/usuario/:id', usuario.selecionar);
+app.post('/usuario', usuario.inserir);
+app.put('/usuario/:id', usuario.alterar);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
