@@ -2,47 +2,33 @@ import Exemplar from '../models/exemplar.js';
 import Livro from '../models/livro.js';
 import util from './util.js';
 
-const listar = async (req, res) => {
+const selecionar = async (req, res) => {
 
-    const livros = await Livro.findAll();
-
-    if(livros.length == 0){
-        return res.status(204).json({
-            mensagem: 'Nenhum livro cadastrado!'
+    if(!req.params.id){
+        return res.status(400).json({
+            mensagem: 'ID do exemplar não informado!'
         });
     }
 
-    const exemplares = await Exemplar.findAll({
-        where: {
-            id_livro: livros.map(livro => livro.id)
-        }
-    });
-
-    console.log(exemplares);
-
-    livros.exemplares = [...exemplares];
-
-    console.log(livros);
-
-    res.status(200).json(livros);
-}
-
-const selecionar = async (req, res) => {
     const id = req.params.id;
+
     // Testa se ID é número
     if(!util.isNumber(id)){
-        return {
-            status: 400,
+        return res.status(400).json({
             mensagem: `ID ${id} não é um número!`,
-        };
-    }
-    await Exemplar.findByPk(id)
-        .then(result => {
-            res.status(result ? 200 : 204).json(result);
-        })
-        .catch(err => {
-            res.stats(500).json(err);
         });
+    }
+
+    // Verifica se exemplar existe
+    const exemplar = await Exemplar.findByPk(id);
+
+    if(!exemplar){
+        return res.status(404).json({
+            mensagem: `Exemplar com ID ${id} não encontrado!`
+        });
+    }
+
+    res.status(200).json(exemplar);
 }
 
 const inserir = async (req, res) => {
@@ -99,4 +85,4 @@ const inserir = async (req, res) => {
     }
 }
 
-export default { listar, selecionar, inserir };
+export default { selecionar, inserir };
