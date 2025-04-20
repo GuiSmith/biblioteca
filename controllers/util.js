@@ -84,6 +84,40 @@ const permittedColumns = async (table) => {
         });
 }
 
+const uniqueColumns = async (table) => {
+    try {
+        const indexes = await sequelize.getQueryInterface().showIndex(table);
+
+        const uniqueIndexes = indexes
+            .filter(index => index.unique && !index.primary)
+            .map(index => (
+                index.fields[0].attribute
+            ));
+        
+        return [...new Set(uniqueIndexes)];
+
+    } catch (error) {
+        console.error(`Erro ao obter colunas únicas: ${error}`);
+        return [];
+    }
+};
+
+const checkUniqueColumn = async (Model, column, value, id = null) => {
+
+    const register = await Model.findOne({
+        where: { [column]: value }
+    });
+
+    if(register){
+        if(id){
+            if(register.dataValues.id == id){
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
 const isNumber = (value) => {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) return false;
@@ -121,4 +155,30 @@ const httpCodes = {
     server_error: 500
 };
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, isNumber, filterObjectKeys, keysMatch };
+const normalizarCPF = (cpf) => {
+    if (typeof cpf !== 'string') {
+        return null;
+    }
+    return cpf.replace(/\D/g, '');
+}
+
+const validarCPF = (cpf) => {
+    if (typeof cpf !== 'string') {
+        return false;
+    }
+    cpf = cpf.replace(/\D/g, '');
+    if (cpf.length !== 11) {
+        return false;
+    }
+    const regex = /^(?!0+$)\d{11}$/;
+    return regex.test(cpf);
+}
+
+const normalizarTelefone = (telefone) => {
+    if (typeof telefone !== 'string') {
+        return null;
+    }
+    return telefone.replace(/\D/g, '');
+}
+
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF };
