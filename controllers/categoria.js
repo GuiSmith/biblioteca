@@ -26,8 +26,13 @@ const listarLivros = async (req, res) => {
     const dados = await livro.findAll({
         where: { id_categoria: id }
     });
+
+
     const status = dados.length > 0 ? 200 : 204;
-    res.status(status).json(dados);
+    res.status(status).json({
+        categoria: categoriaExistente.dataValues,
+        livros: dados.map(livro => livro.dataValues)
+    });
 }
 
 const selecionar = async (req, res) => {
