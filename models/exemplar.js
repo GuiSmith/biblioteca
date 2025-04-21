@@ -35,7 +35,7 @@ const Exemplar = sequelize.define('exemplar', {
         allowNull: false
     },
     data_aquisicao: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true
     },
     situacao: {

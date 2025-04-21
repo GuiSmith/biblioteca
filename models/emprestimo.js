@@ -9,15 +9,15 @@ const Emprestimo = sequelize.define('emprestimo', {
         primaryKey: true
     },
     data_emprestimo: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false
     },
     data_prevista_devolucao: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     data_devolucao: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     observacoes: {

@@ -12,7 +12,7 @@ const Autor = sequelize.define('autor', {
         allowNull: false,
     },
     data_nascimento: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
     },
     biografia: {
         type: DataTypes.TEXT,

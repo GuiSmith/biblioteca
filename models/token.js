@@ -14,7 +14,7 @@ const Token = sequelize.define('token', {
         unique: true,
     },
     data_expiracao: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
     },
     id_usuario: {
