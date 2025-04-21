@@ -1,5 +1,5 @@
 import sequelize from "../banco.js";
-// import { Day } from "sequelize";
+import { isMatch } from "date-fns";
 
 const tabelas = async (req, res) => {
     try {
@@ -202,4 +202,17 @@ const normalizarTelefone = (telefone) => {
     return telefone.replace(/\D/g, '');
 }
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ };
+const validarData = (data) => {
+    if (typeof data !== 'string') {
+        return false;
+    }
+    
+    const dataFormat = 'yyyy-MM-dd';
+
+    return isMatch(data, dataFormat);
+}
+
+// Constantes
+const dias_emprestimo = 15;
+
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo };
