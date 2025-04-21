@@ -1,4 +1,6 @@
+// Importar biblioteca que tem os tipos de dados das colunas do banco de dados
 import { DataTypes } from "sequelize";
+// Importar a conexão com o banco de dados
 import sequelize from "../banco.js";
 
 const Livro = sequelize.define("livro", {
