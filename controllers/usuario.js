@@ -62,14 +62,14 @@ const inserir = async (req, res) => {
         }
     }
 
-    // Verifica se o usuário já existe
+    // Verifica chaves únicas
     const uniqueColumns = await util.uniqueColumns(Usuario.getTableName());
 
     for (const column of uniqueColumns) {
         if (data[column]) {
             const exists = await util.checkUniqueColumn(Usuario, column, data[column]);
             if (exists) {
-                return res.status(400).json({
+                return res.status(409).json({
                     mensagem: `O valor para o dado '${column}' já está em uso`,
                     dado: column,
                     valor: data[column]
