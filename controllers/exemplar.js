@@ -1,5 +1,9 @@
+// Modelos
 import Exemplar from '../models/exemplar.js';
 import Livro from '../models/livro.js';
+import Editora from '../models/editora.js';
+
+// Controladores
 import util from './util.js';
 
 const selecionar = async (req, res) => {
@@ -42,7 +46,7 @@ const inserir = async (req, res) => {
     const data = util.filterObjectKeys(req.body, permittedColumns);
 
     if(!util.keysMatch(data, requiredColumns)){
-        res.status(400).json({
+        return res.status(400).json({
             mensagem: 'Dados obrigatórios não informados',
             obrigatorios: requiredColumns,
             informados: Object.keys(data)
@@ -50,12 +54,20 @@ const inserir = async (req, res) => {
     }
 
     // Verificar se livro existe
-
     const livro = await Livro.findByPk(data.id_livro);
     
     if(!livro){
         return res.status(404).json({
             mensagem: `Livro com ID ${data.id_livro} não encontrado!`
+        });
+    }
+
+    // Verificar se editora existe
+    const editora = await Editora.findByPk(data.id_editora);
+
+    if(!editora){
+        return res.status(404).json({
+            mensagem: `Editora com ID ${data.id_editora} não encontrada!`
         });
     }
 
