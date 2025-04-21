@@ -8,6 +8,14 @@ const Exemplar = sequelize.define('exemplar', {
         allowNull: false,
         primaryKey: true
     },
+    id_editora: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
+    id_livro: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+    },
     condicao_fisica: {
         type: DataTypes.ENUM(
                 'Novo',

@@ -16,7 +16,6 @@ import Editora from './editora.js';
 import Categoria from './categoria.js';
 import Livro from './livro.js';
 import LivroAutor from './livro_autor.js';
-import ExemplarEditora from './exemplar_editora.js';
 import Exemplar from './exemplar.js';
 import Reserva from './reserva.js';
 import Emprestimo from './emprestimo.js';
@@ -79,10 +78,10 @@ Exemplar.belongsTo(Livro, { as: 'livro', foreignKey: 'id_livro' });
 Livro.belongsTo(Categoria, { as: 'categoria', foreignKey: 'id_categoria' });
 Categoria.hasMany(Livro, {as:'livros', foreignKey: 'id_categoria' });
 
-// Livro e Reserva
-Reserva.belongsTo(Livro, { as: 'livro', foreignKey: 'id_livro' });
-Livro.hasMany(Reserva, { foreignKey: 'id_livro' });
+// Exemplar e Reserva
+Exemplar.hasMany(Reserva, { foreignKey: 'id_exemplar' });
+Reserva.belongsTo(Exemplar, { as: 'exemplar', foreignKey: 'id_exemplar' });
 
-// Editora e Exemplar
-Livro.belongsToMany(Editora, { through: ExemplarEditora, foreignKey: "id_livro", as: "editoras" });
-Editora.belongsToMany(Livro, { through: ExemplarEditora, foreignKey: "id_editora", as: "livros" });
+// Editora e exemplar
+Editora.hasMany(Exemplar, { foreignKey: 'id_editora' });
+Exemplar.belongsTo(Editora, { as: 'editora', foreignKey: 'id_editora' });
