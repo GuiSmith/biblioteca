@@ -1,4 +1,5 @@
 import sequelize from "../banco.js";
+// import { Day } from "sequelize";
 
 const tabelas = async (req, res) => {
     try {
@@ -175,6 +176,25 @@ const validarCPF = (cpf) => {
     return regex.test(cpf);
 }
 
+const normalizarCNPJ = (cnpj) => {
+    if (typeof cnpj !== 'string') {
+        return null;
+    }
+    return cnpj.replace(/\D/g, '');
+}
+
+const validarCNPJ = (cnpj) => {
+    if (typeof cnpj !== 'string') {
+        return false;
+    }
+    cnpj = cnpj.replace(/\D/g, '');
+    if (cnpj.length !== 14) {
+        return false;
+    }
+
+    return true;
+}
+
 const normalizarTelefone = (telefone) => {
     if (typeof telefone !== 'string') {
         return null;
@@ -182,4 +202,4 @@ const normalizarTelefone = (telefone) => {
     return telefone.replace(/\D/g, '');
 }
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF };
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ };
