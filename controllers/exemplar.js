@@ -6,6 +6,20 @@ import Editora from '../models/editora.js';
 // Controladores
 import util from './util.js';
 
+// Funções utilitárias
+
+/**
+ * @param {string} situacao - Situação do exemplar
+ * @returns {boolean} - Retorna true se a situação for válida, false caso contrário
+ * @description Verifica se a situação do exemplar é válida
+ */
+const isSituacaoValida = async (situacao) => {
+    const situacoesValidas = await Exemplar.getAttributes().situacao.values;
+    return situacoesValidas.includes(situacao);
+}
+
+// Funções externas
+
 const selecionar = async (req, res) => {
 
     if(!req.params.id){
@@ -188,4 +202,4 @@ const excluir = async (req, res) => {
     }
 }
 
-export default { selecionar, inserir, alterar, excluir };
+export default { selecionar, inserir, alterar, excluir, isSituacaoValida };
