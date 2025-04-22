@@ -81,6 +81,8 @@ app.put('/editora/:id', editora.alterar);
 app.delete('/editora/:id', editora.excluir);
 
 // Reserva
+app.get('/reserva', reserva.listar);
 app.post('/reserva', reserva.inserir);
+app.put('/reserva/:id', reserva.alterar);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
