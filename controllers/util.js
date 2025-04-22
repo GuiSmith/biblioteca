@@ -1,5 +1,6 @@
 import sequelize from "../banco.js";
 import { isMatch } from "date-fns";
+import bcrypt from 'bcrypt';
 
 const tabelas = async (req, res) => {
     try {
@@ -212,7 +213,28 @@ const validarData = (data) => {
     return isMatch(data, dataFormat);
 }
 
+const criptografarSenha = async (senha) => {
+    return await bcrypt.hash(senha, saltRounds);
+}
+
+const compararSenha = async (senha, senhaCriptografada) => {
+    return await bcrypt.compare(senha, senhaCriptografada);
+}
+
+const dataColumns = async (Model) => {
+    return Object.entries(await Model.getAttributes())
+        .filter(([_, attributes]) => attributes.type.constructor.name === 'DATEONLY')
+        .map(([fieldName, _]) => fieldName);
+}
+
 // Constantes
 const dias_emprestimo = 15;
+const saltRounds = 10;
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo };
+(async () => {
+    const data = '2003-03';
+
+    console.log(validarData(data));
+})();
+
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dataColumns };
