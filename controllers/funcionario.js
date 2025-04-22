@@ -79,6 +79,11 @@ const inserir = async (req, res) => {
     }
 
     if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
         data.senha = await util.criptografarSenha(data.senha);
     }
 
@@ -141,6 +146,11 @@ const alterar = async (req, res) => {
     }
 
     if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
         data.senha = await util.criptografarSenha(data.senha);
     }
 
@@ -172,8 +182,8 @@ const demitir = async (req, res) => {
         return res.status(404).json({
             mensagem: `Funcionário com ID ${id} não encontrado`
         });
-    }else{
-        if(funcionarioExistente.dataValues.ativo == false && funcionarioExistente.dataValues.data_demissao != null){
+    } else {
+        if (funcionarioExistente.dataValues.ativo == false && funcionarioExistente.dataValues.data_demissao != null) {
             return res.status(409).json({
                 mensagem: `Funcionário já está demitido`,
                 funcionario: {
@@ -209,4 +219,55 @@ const demitir = async (req, res) => {
         }))
 }
 
-export default { listar, selecionar, inserir, alterar, demitir };
+const definirSenha = async (req, res) => {
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'Informe o ID do funcionário'
+        });
+    }
+    const id = req.params.id;
+
+    // Verifica se o funcionário existe
+    const funcionarioExistente = await Funcionario.findByPk(id);
+    if (!funcionarioExistente) {
+        return res.status(404).json({
+            mensagem: `Funcionário com ID ${id} não encontrado`
+        });
+    }
+
+    // Filtrando dados
+    const dadosObrigatorios = ['senha'];
+    const data = util.filterObjectKeys(req.body, dadosObrigatorios);
+    if (!util.keysMatch(data, dadosObrigatorios)) {
+        return res.status(400).json({
+            mensagem: 'Dados obrigatórios não informados',
+            obrigatorios: dadosObrigatorios,
+            informados: Object.keys(data)
+        });
+    }
+
+    if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
+        data.senha = await util.criptografarSenha(data.senha);
+    }
+
+    data.token = '';
+
+    return await Funcionario.update(data, {
+        where: { id }
+    })
+        .then(result => res.status(200).json({
+            mensagem: 'Senha definida com sucesso'
+        }))
+        .catch(erro => res.status(500).json({
+            mensagem: 'Erro ao demitir funcionário',
+            erro: erro
+        }))
+}
+
+export default { listar, selecionar, inserir, alterar, demitir, definirSenha };
