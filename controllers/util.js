@@ -231,10 +231,4 @@ const dataColumns = async (Model) => {
 const dias_emprestimo = 15;
 const saltRounds = 10;
 
-(async () => {
-    const data = '2003-03';
-
-    console.log(validarData(data));
-})();
-
 export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dataColumns };

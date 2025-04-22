@@ -5,7 +5,7 @@ import cors from 'cors';
 const app = express();
 const corsOptions = {
     origin: 'https://guismith.github.io/biblioteca',  // Domínio permitido
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],  // Métodos permitidos
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],  // Métodos permitidos
     allowedHeaders: ['Content-Type', 'Authorization'],  // Cabeçalhos permitidos
 };
 
@@ -91,5 +91,6 @@ app.get('/funcionario',funcionario.listar);
 app.get('/funcionario/:id', funcionario.selecionar);
 app.post('/funcionario', funcionario.inserir);
 app.put('/funcionario/:id', funcionario.alterar);
+app.patch('/funcionario/:id/demitir', funcionario.demitir);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

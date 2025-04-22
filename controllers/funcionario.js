@@ -157,4 +157,56 @@ const alterar = async (req, res) => {
 
 }
 
-export default { listar, selecionar, inserir, alterar };
+const demitir = async (req, res) => {
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'Informe o ID do funcionário'
+        });
+    }
+    const id = req.params.id;
+
+    // Verifica se o funcionário existe
+    const funcionarioExistente = await Funcionario.findByPk(id);
+    if (!funcionarioExistente) {
+        return res.status(404).json({
+            mensagem: `Funcionário com ID ${id} não encontrado`
+        });
+    }else{
+        if(funcionarioExistente.dataValues.ativo == false && funcionarioExistente.dataValues.data_demissao != null){
+            return res.status(409).json({
+                mensagem: `Funcionário já está demitido`,
+                funcionario: {
+                    ativo: funcionarioExistente.dataValues.ativo,
+                    data_demissao: funcionarioExistente.dataValues.data_demissao
+                }
+            });
+        }
+    }
+
+    // Filtrando dados
+    const dadosObrigatorios = ['data_demissao'];
+    const data = util.filterObjectKeys(req.body, dadosObrigatorios);
+    if (!util.keysMatch(data, dadosObrigatorios)) {
+        return res.status(400).json({
+            mensagem: 'Dados obrigatórios não informados',
+            obrigatorios: dadosObrigatorios,
+            informados: Object.keys(data)
+        });
+    }
+
+    data.ativo = false;
+
+    return await Funcionario.update(data, {
+        where: { id }
+    })
+        .then(result => res.status(200).json({
+            mensagem: 'Funcionário demitido com sucesso'
+        }))
+        .catch(erro => res.status(500).json({
+            mensagem: 'Erro ao demitir funcionário',
+            erro: erro
+        }))
+}
+
+export default { listar, selecionar, inserir, alterar, demitir };
