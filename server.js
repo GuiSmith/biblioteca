@@ -74,6 +74,7 @@ app.get('/usuario', usuario.listar);
 app.get('/usuario/:id', usuario.selecionar);
 app.post('/usuario', usuario.inserir);
 app.put('/usuario/:id', usuario.alterar);
+app.post('/usuario/:id/senha', usuario.definirSenha);
 
 // Editora
 app.get('/editora', editora.listar);

@@ -11,21 +11,21 @@ const listar = async (req, res) => {
 
 const selecionar = async (req, res) => {
     // Verifica se o ID foi informado
-    if(!req.params.id){
+    if (!req.params.id) {
         return res.status(400).json({
             mensagem: 'ID não informado'
         });
     }
     const { id } = req.params;
     // Verifica se o ID é um número
-    if(!util.isNumber(id)){
+    if (!util.isNumber(id)) {
         return res.status(400).json({
             mensagem: 'ID não é número'
         });
     }
     const usuario = await Usuario.findByPk(id);
 
-    if(!usuario){
+    if (!usuario) {
         return res.status(404).json({
             mensagem: `Usuário com ID ${id} não encontrado!`
         });
@@ -41,7 +41,7 @@ const inserir = async (req, res) => {
 
     const data = util.filterObjectKeys(req.body, permittedColumns);
 
-    if(!util.keysMatch(data, requiredColumns)){
+    if (!util.keysMatch(data, requiredColumns)) {
         res.status(400).json({
             mensagem: 'Dados obrigatórios não informados',
             obrigatorios: requiredColumns,
@@ -50,16 +50,25 @@ const inserir = async (req, res) => {
     }
 
     // Verifica se o CPF é válido
-    if(data.cpf){
+    if (data.cpf) {
         const novoCPF = util.normalizarCPF(data.cpf);
-        if(util.validarCPF(novoCPF)){
+        if (util.validarCPF(novoCPF)) {
             data.cpf = novoCPF;
-        }else{
+        } else {
             return res.status(400).json({
                 mensagem: 'CPF inválido',
                 cpf: data.cpf
             });
         }
+    }
+
+    if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
+        data.senha = await util.criptografarSenha(data.senha);
     }
 
     // Verifica chaves únicas
@@ -77,7 +86,7 @@ const inserir = async (req, res) => {
             }
         }
     }
-    
+
 
     try {
         const usuario = await Usuario.create(data);
@@ -92,16 +101,16 @@ const inserir = async (req, res) => {
 
 const alterar = async (req, res) => {
     // Verifica se o ID foi informado
-    if(!req.params.id){
+    if (!req.params.id) {
         return res.status(400).json({
             mensagem: 'ID não informado'
         });
     }
 
     const { id } = req.params;
-    
+
     // Verifica se o ID é um número
-    if(!util.isNumber(id)){
+    if (!util.isNumber(id)) {
         return res.status(400).json({
             mensagem: 'ID não é número'
         });
@@ -110,7 +119,7 @@ const alterar = async (req, res) => {
     // Verifica se o usuário existe
 
     const usuario = await Usuario.findByPk(id);
-    if(!usuario){
+    if (!usuario) {
         return res.status(404).json({
             mensagem: `Usuário com ID ${id} não encontrado!`
         });
@@ -121,11 +130,11 @@ const alterar = async (req, res) => {
 
     const data = util.filterObjectKeys(req.body, permittedColumns);
 
-    if(data.cpf){
+    if (data.cpf) {
         const novoCPF = util.normalizarCPF(data.cpf);
-        if(util.validarCPF(novoCPF)){
+        if (util.validarCPF(novoCPF)) {
             data.cpf = novoCPF;
-        }else{
+        } else {
             return res.status(400).json({
                 mensagem: 'CPF inválido',
                 cpf: data.cpf
@@ -133,24 +142,33 @@ const alterar = async (req, res) => {
         }
     }
 
-     // Verifica os valores unicos
-     const uniqueColumns = await util.uniqueColumns(Usuario.getTableName());
+    // Verifica os valores unicos
+    const uniqueColumns = await util.uniqueColumns(Usuario.getTableName());
 
-     console.log(uniqueColumns);
+    console.log(uniqueColumns);
 
-     for (const column of uniqueColumns) {
-         if (data[column]) {
-             const exists = await util.checkUniqueColumn(Usuario, column, data[column], id);
-             console.log(id, column, data[column], exists);
-             if (exists) {
-                 return res.status(400).json({
-                     mensagem: `O valor para o dado '${column}' já está em uso`,
-                     dado: column,
-                     valor: data[column]
-                 });
-             }
-         }
-     }
+    for (const column of uniqueColumns) {
+        if (data[column]) {
+            const exists = await util.checkUniqueColumn(Usuario, column, data[column], id);
+            console.log(id, column, data[column], exists);
+            if (exists) {
+                return res.status(400).json({
+                    mensagem: `O valor para o dado '${column}' já está em uso`,
+                    dado: column,
+                    valor: data[column]
+                });
+            }
+        }
+    }
+
+    if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
+        data.senha = await util.criptografarSenha(data.senha);
+    }
 
     try {
         const usuario = await Usuario.update(data, {
@@ -168,4 +186,55 @@ const alterar = async (req, res) => {
     }
 };
 
-export default { listar, selecionar, inserir, alterar  };
+const definirSenha = async (req, res) => {
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'Informe o ID do usuário'
+        });
+    }
+    const id = req.params.id;
+
+    // Verifica se o usuário existe
+    const usuarioExistente = await Usuario.findByPk(id);
+    if (!usuarioExistente) {
+        return res.status(404).json({
+            mensagem: `Usuário com ID ${id} não encontrado`
+        });
+    }
+
+    // Filtrando dados
+    const dadosObrigatorios = ['senha'];
+    const data = util.filterObjectKeys(req.body, dadosObrigatorios);
+    if (!util.keysMatch(data, dadosObrigatorios)) {
+        return res.status(400).json({
+            mensagem: 'Dados obrigatórios não informados',
+            obrigatorios: dadosObrigatorios,
+            informados: Object.keys(data)
+        });
+    }
+
+    if (data.senha) {
+        if (data.senha.length < 6 || data.senha.length > 20) {
+            return res.status(400).json({
+                mensagem: `A senha deve ter entre 6 e 20 caracteres`
+            });
+        }
+        data.senha = await util.criptografarSenha(data.senha);
+    }
+
+    data.token = '';
+
+    return await Usuario.update(data, {
+        where: { id }
+    })
+        .then(result => res.status(200).json({
+            mensagem: 'Senha definida com sucesso'
+        }))
+        .catch(erro => res.status(500).json({
+            mensagem: 'Erro ao definir senha',
+            erro: erro
+        }))
+}
+
+export default { listar, selecionar, inserir, alterar, definirSenha };

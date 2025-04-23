@@ -38,6 +38,10 @@ const Usuario = sequelize.define('usuario', {
         type: DataTypes.STRING(100),
         allowNull: true,
     },
+    token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+    }
 });
 
 export default Usuario;
