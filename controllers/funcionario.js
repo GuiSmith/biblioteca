@@ -265,9 +265,90 @@ const definirSenha = async (req, res) => {
             mensagem: 'Senha definida com sucesso'
         }))
         .catch(erro => res.status(500).json({
-            mensagem: 'Erro ao demitir funcionário',
+            mensagem: 'Erro ao definir senha',
             erro: erro
         }))
 }
 
-export default { listar, selecionar, inserir, alterar, demitir, definirSenha };
+const login = async (req, res) => {
+    // Verifica se o ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'Informe o ID do funcionário'
+        });
+    }
+    const id = req.params.id;
+
+    // Verifica se o funcionário existe
+    const funcionarioExistente = await Funcionario.findByPk(id);
+    if (!funcionarioExistente) {
+        return res.status(404).json({
+            mensagem: `Funcionário com ID ${id} não encontrado`
+        });
+    }
+
+    // Filtrando dados
+    const dadosObrigatorios = ['email', 'senha'];
+    const data = util.filterObjectKeys(req.body, dadosObrigatorios);
+    if (!util.keysMatch(data, dadosObrigatorios)) {
+        return res.status(400).json({
+            mensagem: 'Dados obrigatórios não informados',
+            obrigatorios: dadosObrigatorios,
+            informados: Object.keys(data)
+        });
+    }
+
+    // Verificando se funcionário está inativo
+    if (funcionarioExistente.dataValues.ativo == false) {
+        return res.status(409).json({
+            mensagem: "Não é possível fazer login de funcionário inativo"
+        });
+    }
+
+    // Verificando se funcionário não tem e-mail ou senha
+    if (funcionarioExistente.dataValues.email == null || funcionarioExistente.dataValues.senha == null) {
+        return res.status(409).json({
+            mensagem: "Este funcionário não tem email ou senha registrados",
+            funcionario: {
+                email: funcionarioExistente.dataValues.email,
+                senha: funcionarioExistente.dataValues.senha
+            }
+        });
+    }
+
+    // Verificando se funcionário digitou a senha correta ou não
+    const senhaCorreta = await util.compararSenha(data.senha, funcionarioExistente.dataValues.senha);
+    if (funcionarioExistente.dataValues.email != data.email || !senhaCorreta ) {
+        console.log(`email: ${funcionarioExistente.dataValues.email != data.email}`);
+        console.log(`senha: ${senhaCorreta}`);
+        return res.status(409).json({
+            mensagem: "E-mail ou senha incorretos",
+            funcionario: {
+                email: data.email,
+                senha: data.senha
+            }
+        });
+    }
+
+    const token = await util.gerarToken();
+
+    if (token) {
+        return await Funcionario.update({ token }, {
+            where: { id }
+        })
+            .then(result => res.status(200).json({
+                mensagem: 'Login realizado com sucesso',
+                token: token
+            }))
+            .catch(erro => res.status(500).json({
+                mensagem: 'Erro ao realizar login',
+                erro: erro
+            }))
+    }else{
+        return res.status(500).json({
+            mensagem: `Não foi possível gerar token`
+        });
+    }
+}
+
+export default { listar, selecionar, inserir, alterar, demitir, definirSenha, login };

@@ -92,6 +92,7 @@ app.get('/funcionario/:id', funcionario.selecionar);
 app.post('/funcionario', funcionario.inserir);
 app.put('/funcionario/:id', funcionario.alterar);
 app.patch('/funcionario/:id/demitir', funcionario.demitir);
-app.patch('/funcionario/:id/senha', funcionario.definirSenha);
+app.post('/funcionario/:id/senha', funcionario.definirSenha);
+app.post('/funcionario/:id/login', funcionario.login);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

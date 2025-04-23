@@ -1,6 +1,7 @@
 import sequelize from "../banco.js";
 import { isMatch } from "date-fns";
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 const tabelas = async (req, res) => {
     try {
@@ -227,8 +228,12 @@ const dataColumns = async (Model) => {
         .map(([fieldName, _]) => fieldName);
 }
 
+const gerarToken = async () => {
+    return crypto.randomBytes(32).toString('hex');
+}
+
 // Constantes
 const dias_emprestimo = 15;
 const saltRounds = 10;
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dataColumns };
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dataColumns, gerarToken };
