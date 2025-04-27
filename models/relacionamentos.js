@@ -1,15 +1,13 @@
 // ==================== Principais Entidades ====================
 import Usuario from './usuario.js';
-import Token from './token.js';
+import Funcionario from './funcionario.js';
 // ==================== DADOS CADASTRAIS ====================
 import Cidade from './cidade.js';
 import Uf from './uf.js';
 // Endereços
-import EnderecoEditora from './endereco_editora.js';
-import EnderecoUsuario from './endereco_usuario.js';
+import EditoraEndereco from './editora_endereco.js';
 // Telefones
-import TelefoneUsuario from './telefone_usuario.js';
-import TelefoneEditora from './telefone_editora.js';
+import UsuarioTelefone from './usuario_telefone.js';
 // ==================== LIVROS ====================
 import Autor from './autor.js';
 import Editora from './editora.js';
@@ -19,12 +17,9 @@ import LivroAutor from './livro_autor.js';
 import Exemplar from './exemplar.js';
 import Reserva from './reserva.js';
 import Emprestimo from './emprestimo.js';
+import Multa from './multa.js';
 
 // ==================== PRINCIPAIS ENTIDADES ====================
-
-// Usuário e Token
-Token.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario', });
-Usuario.hasMany(Token, { foreignKey: 'id_usuario', });
 
 // Usuário e Empréstimo
 Usuario.hasMany(Emprestimo, { foreignKey: 'id_usuario' });
@@ -36,29 +31,17 @@ Emprestimo.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario' });
 Cidade.belongsTo(Uf, { as: 'uf', foreignKey: 'id_uf' });
 Uf.hasMany(Cidade, { foreignKey: 'id_uf' });
 
-// Endereço e Usuário
-EnderecoUsuario.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario' });
-Usuario.hasMany(EnderecoUsuario, { foreignKey: 'id_usuario' });
-
 // Endereço e Editora
-EnderecoEditora.belongsTo(Editora, { as: 'editora', foreignKey: 'id_editora' });
-Editora.hasMany(EnderecoEditora, { foreignKey: 'id_editora' });
-
-// Endereço de usuário e Cidade
-EnderecoUsuario.belongsTo(Cidade, { as: 'cidade', foreignKey: 'id_cidade' });
-Cidade.hasMany(EnderecoUsuario, { foreignKey: 'id_cidade' });
+EditoraEndereco.belongsTo(Editora, { as: 'editora', foreignKey: 'id_editora' });
+Editora.hasMany(EditoraEndereco, { foreignKey: 'id_editora' });
 
 // Endereço de editora e Cidade
-EnderecoEditora.belongsTo(Cidade, { as: 'cidade', foreignKey: 'id_cidade' });
-Cidade.hasMany(EnderecoEditora, { foreignKey: 'id_cidade' });
+EditoraEndereco.belongsTo(Cidade, { as: 'cidade', foreignKey: 'id_cidade' });
+Cidade.hasMany(EditoraEndereco, { foreignKey: 'id_cidade' });
 
 // Telefone e Usuário
-TelefoneUsuario.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario' });
-Usuario.hasMany(TelefoneUsuario, { foreignKey: 'id_usuario' });
-
-// Telefone e Editora
-TelefoneEditora.belongsTo(Editora, { as: 'editora', foreignKey: 'id_editora' });
-Editora.hasMany(TelefoneEditora, { foreignKey: 'id_editora' });
+UsuarioTelefone.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario' });
+Usuario.hasMany(UsuarioTelefone, { foreignKey: 'id_usuario' });
 
 // ==================== LIVROS ====================
 
@@ -85,3 +68,11 @@ Reserva.belongsTo(Exemplar, { as: 'exemplar', foreignKey: 'id_exemplar' });
 // Editora e exemplar
 Editora.hasMany(Exemplar, { foreignKey: 'id_editora' });
 Exemplar.belongsTo(Editora, { as: 'editora', foreignKey: 'id_editora' });
+
+// Multa e empréstimo
+Emprestimo.hasMany(Multa, { foreignKey: 'id_emprestimo'});
+Multa.belongsTo(Emprestimo, { as: 'emprestimo', foreignKey: 'id_emprestimo'});
+
+// Multa e usuário
+Usuario.hasMany(Multa, { foreignKey: 'id_usuario'});
+Multa.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario'});
