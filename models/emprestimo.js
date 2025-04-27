@@ -27,6 +27,10 @@ const Emprestimo = sequelize.define('emprestimo', {
     id_usuario: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    id_reserva: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     }
 });
 

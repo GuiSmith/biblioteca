@@ -3,9 +3,11 @@ import { Op } from 'sequelize';
 import { addDays, subDays, format } from 'date-fns';
 
 // Modelos
+import '../models/relacionamentos.js';
 import Reserva from '../models/reserva.js';
 import Usuario from '../models/usuario.js';
 import Exemplar from '../models/exemplar.js';
+import Emprestimo from '../models/emprestimo.js';
 
 // Controladores
 import util from './util.js';
@@ -175,61 +177,67 @@ const alterar = async (req, res) => {
         });
     }
 
-    // Verifica se o exemplar existe
-    const exemplarExistente = await Exemplar.findByPk(data.id_exemplar || reservaExistente.dataValues.id_exemplar);
-    if (!exemplarExistente) {
-        return res.status(404).json({
-            mensagem: `Exemplar com ID ${data.id_exemplar} não encontrado!`
-        });
-    }
-
-    // Verifica se o usuário existe
-    const usuarioExistente = await Usuario.findByPk(data.id_usuario || reservaExistente.dataValues.id_usuario);
-    if (!usuarioExistente) {
-        return res.status(404).json({
-            mensagem: `Usuário com ID ${data.id_usuario} não encontrado!`
-        });
-    }
-
-    data.data_reserva = data.data_reserva || reservaExistente.dataValues.data_reserva;
-    data.data_prevista_devolucao = data.data_prevista_devolucao || reservaExistente.dataValues.data_prevista_devolucao;
-
-    // Verifica se situações existem
-    const situacaoDisponivel = await exemplar.isSituacaoValida('Disponível') ? 'Disponível' : null;
-    const situacaoEmprestado = await exemplar.isSituacaoValida('Emprestado') ? 'Emprestado' : null;
-    if (!situacaoDisponivel || !situacaoEmprestado) {
-        return res.status(500).json({
-            mensagem: 'Erro ao verificar situação do exemplar'
-        });
-    }
-
-    // Verifica se exemplar está disponível
-    if (exemplarExistente.dataValues.situacao != situacaoDisponivel) {
-        // Verifica se exemplar está emprestado
-        if (exemplarExistente.dataValues.situacao == situacaoEmprestado) {
-            // Verificar se o exemplar estará disponível na data desejada de reserva
-            const conflitoEmprestimo = await emprestimo.conflitoEmprestimo(data.id_exemplar, data.data_reserva);
-            if (conflitoEmprestimo) {
-                return res.status(409).json({
-                    mensagem: `Exemplar ${data.id_exemplar} ainda estará emprestado nesta data!`,
-                });
-            }
+    // Se usuário foi informado, verifica se existe
+    if(data.id_usuario){
+        const usuarioExistente = await Usuario.findByPk(data.id_usuario);
+        if (!usuarioExistente) {
+            return res.status(404).json({
+                mensagem: `Usuário com ID ${data.id_usuario} não encontrado!`
+            });
         }
-        // Não é possível reservar, pois o exemplar não está disponível
-        return res.status(409).json({
-            mensagem: `Exemplar com ID ${data.id_exemplar} não disponível. Situação atual: ${exemplarExistente.dataValues.situacao}!`,
-        });
     }
 
-    // Verifica se há conflito de reserva para este exemplar
-    const conflito = await conflitoReserva(data.id_exemplar, data.data_reserva, data.data_prevista_devolucao, id);
-    if (conflito) {
-        return res.status(409).json({
-            mensagem: `Exemplar já está reservado neste período!`
-        });
-    }
+    // Se exemplar foi informado, verifica se existe
+    if (data.id_exemplar) {
+        const exemplarExistente = await Exemplar.findByPk(data.id_exemplar);
+        if (!exemplarExistente) {
+            return res.status(404).json({
+                mensagem: `Exemplar com ID ${data.id_exemplar} não encontrado!`
+            });
+        }
 
-    return res.status(200).json({ mensagem: "Pronto para atualizar" });
+        // Redefine datas de reserva
+
+        data.data_reserva = data.data_reserva || reservaExistente.dataValues.data_reserva;
+        data.data_prevista_devolucao = data.data_prevista_devolucao || reservaExistente.dataValues.data_prevista_devolucao;
+
+        // Verifica se situações existem
+        const situacaoDisponivel = await exemplar.isSituacaoValida('Disponível') ? 'Disponível' : null;
+        const situacaoEmprestado = await exemplar.isSituacaoValida('Emprestado') ? 'Emprestado' : null;
+        if (!situacaoDisponivel || !situacaoEmprestado) {
+            console.log(situacaoDisponivel);
+            console.log(situacaoEmprestado);
+            return res.status(500).json({
+                mensagem: 'Erro ao verificar situação do exemplar'
+            });
+        }
+
+        // Verifica se exemplar está disponível
+        if (exemplarExistente.dataValues.situacao != situacaoDisponivel) {
+            // Verifica se exemplar está emprestado
+            if (exemplarExistente.dataValues.situacao == situacaoEmprestado) {
+                // Verificar se o exemplar estará disponível na data desejada de reserva
+                const conflitoEmprestimo = await emprestimo.conflitoEmprestimo(data.id_exemplar, data.data_reserva);
+                if (conflitoEmprestimo) {
+                    return res.status(409).json({
+                        mensagem: `Exemplar ${data.id_exemplar} ainda estará emprestado nesta data!`,
+                    });
+                }
+            }
+            // Não é possível reservar, pois o exemplar não está disponível
+            return res.status(409).json({
+                mensagem: `Exemplar com ID ${data.id_exemplar} não disponível. Situação atual: ${exemplarExistente.dataValues.situacao}!`,
+            });
+        }
+
+        // Verifica se há conflito de reserva para este exemplar
+        const conflito = await conflitoReserva(data.id_exemplar, data.data_reserva, data.data_prevista_devolucao, id);
+        if (conflito) {
+            return res.status(409).json({
+                mensagem: `Exemplar já está reservado neste período!`
+            });
+        }
+    }
 
     // Atualiza a reserva
     return await Reserva.update(data, {
@@ -248,4 +256,54 @@ const alterar = async (req, res) => {
         });
 }
 
-export default { inserir, alterar, listar };
+const excluir = async (req, res) => {
+    // Verifica se ID foi passado
+    if(!req.params.id){
+        return res.status(400).json({
+            mensagem: `ID não informado`
+        });
+    }
+    const id = req.params.id;
+    // Verifica se o ID passado é um número
+    if(!util.isNumber(id)){
+        return res.status(400).json({
+            mensagem: `ID não é um número: ${typeof(id)}`
+        });
+    }
+    // Verifica se existe
+    const reservaExistente = await Reserva.findByPk(id);
+    if(!reservaExistente){
+        return res.status(409).json({
+            mensagem: `Reserva não encontrada`
+        });
+    }
+
+    // Verifica se existe um empréstimo criado com esta reserva
+    const emprestimoExistente = await Emprestimo.findOne({
+        where: {
+            id_reserva: reservaExistente.dataValues.id
+        }
+    })
+
+    if(emprestimoExistente){
+        return res.status(409).json({
+            mensagem: `Não é possível deletar reserva pois já existe um empréstimo com esta reserva`
+        });
+    }
+
+    return await Reserva.destroy({
+        where: { id }
+    })
+        .then(result => res.status(200).json({
+            mensagem: `${result} registros deletados com sucesso`
+        }))
+        .catch(error => res.status(500).json({
+            menasgem: `Ocorreu um erro ao deletar reserva`,
+            erro: error
+        }));
+}
+
+(async () => {
+    console.log(Reserva.associations);
+})();
+export default { inserir, alterar, listar, excluir };

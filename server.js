@@ -86,6 +86,7 @@ app.delete('/editora/:id', editora.excluir);
 app.get('/reserva', reserva.listar);
 app.post('/reserva', reserva.inserir);
 app.put('/reserva/:id', reserva.alterar);
+app.delete('/reserva/:id', reserva.excluir);
 
 // Funcionários
 app.get('/funcionario',funcionario.listar);
