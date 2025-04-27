@@ -8,11 +8,13 @@ import Reserva from '../models/reserva.js';
 import Usuario from '../models/usuario.js';
 import Exemplar from '../models/exemplar.js';
 import Emprestimo from '../models/emprestimo.js';
+import Multa from '../models/multa.js';
 
 // Controladores
 import util from './util.js';
 import emprestimo from './emprestimo.js';
 import exemplar from './exemplar.js';
+import multa from './multa.js';
 
 // Funções utilitárias
 
@@ -134,6 +136,30 @@ const inserir = async (req, res) => {
     if (conflito) {
         return res.status(409).json({
             mensagem: `Exemplar já está reservado neste período!`
+        });
+    }
+
+    // Verificar se usuário tem pendências financeiras
+    const statusAberto = 'A';
+    const multaStatusAberta = multa.isStatusValido(statusAberto) ? statusAberto : null;
+    if(!multaStatusAberta){
+        return res.status(404).json({
+            mensagem: `Nenhuma multa com status '${statusAberto}' foi encontrada para o usuário`,
+            erro: `Status '${statusAberto}' não existe nas configurações de multas`
+        });
+    }
+    const multaAberta = await Multa.findOne(
+        {
+            where: {
+                id_usuario: data.id_usuario,
+                status: 'A'
+            }
+        }
+    );
+
+    if(multaAberta){
+        return res.status(409).json({
+            mensagem: `Usuário não pode ter pendências financeiras ao criar reservas`
         });
     }
 
