@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../banco.js';
 
-const TelefoneUsuario = sequelize.define('telefone_usuario', {
+const UsuarioTelefone = sequelize.define('usuario_telefone', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -22,4 +22,4 @@ const TelefoneUsuario = sequelize.define('telefone_usuario', {
     },
 });
 
-export default TelefoneUsuario;
+export default UsuarioTelefone;
