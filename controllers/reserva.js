@@ -50,6 +50,24 @@ const conflitoReserva = async (id_exemplar, dataReserva, dataPrevistaDevolucao, 
     return !!conflito;
 }
 
+/**
+ * Verifica se um status fornecido é válido para reservas.
+ *
+ * @param {string} status - O status a ser verificado. Deve ser uma string.
+ * @returns {Promise<boolean>} Retorna uma Promise que resolve para `true` se o status for válido, ou `false` caso contrário.
+ *
+ * @description
+ * Esta função verifica se o `status` passado existe na lista de valores válidos definidos no modelo `Reserva`.
+ */
+const isStatusValido = async (status) => {
+    if(typeof(status) == 'string'){
+        const statusValidos = await Reserva.getAttributes().status.values;
+        return statusValidos.includes(status);
+    }
+
+    return false;
+}
+
 // Funções externas
 
 const listar = async (req, res) => {
@@ -332,4 +350,4 @@ const excluir = async (req, res) => {
 (async () => {
     console.log(Reserva.associations);
 })();
-export default { inserir, alterar, listar, excluir };
+export default { inserir, alterar, listar, excluir, isStatusValido };
