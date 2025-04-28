@@ -14,7 +14,7 @@ const Emprestimo = sequelize.define('emprestimo', {
     },
     data_prevista_devolucao: {
         type: DataTypes.DATEONLY,
-        allowNull: true,
+        allowNull: false,
     },
     data_devolucao: {
         type: DataTypes.DATEONLY,
@@ -31,6 +31,10 @@ const Emprestimo = sequelize.define('emprestimo', {
     id_reserva: {
         type: DataTypes.INTEGER,
         allowNull: true,
+    },
+    id_exemplar: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
     }
 });
 
