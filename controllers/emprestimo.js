@@ -158,6 +158,8 @@ const inserir = async (req, res) => {
 
     }
 
+    // Verifica se os campos de data são válidos
+
     data.data_prevista_devolucao = data.data_prevista_devolucao || addDays(data.data_emprestimo, util.dias_emprestimo);
 
     return await Emprestimo.create(data)
@@ -168,5 +170,10 @@ const inserir = async (req, res) => {
         }));
 
 };
+
+(async () => {
+    const data = '2025-03-10';
+    console.log(util.validarData(data));
+})();
 
 export default { inserir, conflitoEmprestimo };
