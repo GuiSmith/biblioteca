@@ -24,6 +24,7 @@ import usuario from './controllers/usuario.js';
 import editora from './controllers/editora.js';
 import reserva from './controllers/reserva.js';
 import funcionario from './controllers/funcionario.js';
+import emprestimo from './controllers/emprestimo.js';
 
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
@@ -96,5 +97,8 @@ app.put('/funcionario/:id', funcionario.alterar);
 app.patch('/funcionario/:id/demitir', funcionario.demitir);
 app.post('/funcionario/:id/senha', funcionario.definirSenha);
 app.post('/funcionario/:id/login', funcionario.login);
+
+// Emprestimo
+app.post('/emprestimo', emprestimo.inserir);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

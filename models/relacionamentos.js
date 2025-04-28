@@ -76,3 +76,7 @@ Multa.belongsTo(Emprestimo, { as: 'emprestimo', foreignKey: 'id_emprestimo'});
 // Multa e usuário
 Usuario.hasMany(Multa, { foreignKey: 'id_usuario'});
 Multa.belongsTo(Usuario, { as: 'usuario', foreignKey: 'id_usuario'});
+
+// Exemplar e empréstimo
+Exemplar.hasMany(Emprestimo, { foreignKey: 'id_exemplar'});
+Emprestimo.belongsTo(Exemplar, { as: 'exemplar', foreignKey: 'id_exemplar' });
