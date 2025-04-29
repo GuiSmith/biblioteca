@@ -39,6 +39,15 @@ const conflitoEmprestimo = async (id_exemplar, dataEmprestimo) => {
 
 // Funções externas
 
+const listar = async (req, res) => {
+    return await Emprestimo.findAll()
+        .then(emprestimos => res.status(emprestimos.length > 0 ? 200 : 204).json(emprestimos))
+        .catch(error => res.status(500).json({
+            mensagem: `Erro ao listar empréstimos`,
+            erro: error
+        }));
+}
+
 const inserir = async (req, res) => {
 
     const requiredColumns = await util.requiredColumns(Emprestimo.getTableName());
@@ -57,9 +66,9 @@ const inserir = async (req, res) => {
     console.log(data);
 
     // Validar se ID de usuário é número
-    if(!util.isNumber(data.id_usuario)){
+    if (!util.isNumber(data.id_usuario)) {
         return res.status(400).json({
-            mensagem: `ID do usuário deve ser um número: ${typeof(data.id_usuario)}`
+            mensagem: `ID do usuário deve ser um número: ${typeof (data.id_usuario)}`
         });
     }
     // Validar se usuário existe
@@ -72,15 +81,15 @@ const inserir = async (req, res) => {
     }
 
     // Validar se ID de exemplar é número
-    if(!util.isNumber(data.id_exemplar)){
+    if (!util.isNumber(data.id_exemplar)) {
         return res.status(400).json({
-            mensagem: `ID do exemplar deve ser um número: ${typeof(data.id_exemplar)}`
+            mensagem: `ID do exemplar deve ser um número: ${typeof (data.id_exemplar)}`
         });
     }
 
     // Validar se exemplar existe
     const exemplarExistente = await Exemplar.findByPk(data.id_exemplar);
-    if(!exemplarExistente){
+    if (!exemplarExistente) {
         return res.status(404).json({
             mensagem: `Exemplar não encontrado`
         });
@@ -88,14 +97,14 @@ const inserir = async (req, res) => {
 
     // Validar se livro do exemplar existe
     const livroExistente = await Livro.findByPk(exemplarExistente.dataValues.id_livro);
-    if(!livroExistente){
+    if (!livroExistente) {
         return res.status(404).json({
             mensagem: `Livro do exemplar não encontrado: ID ${exemplarExistente.dataValues.id_livro}`
         });
     }
 
     // Validar se livro do exemplar está ativo
-    if(!livroExistente.dataValues.ativo){
+    if (!livroExistente.dataValues.ativo) {
         return res.status(409).json({
             mensagem: `Livro do exemplar inativo`
         });
@@ -103,13 +112,13 @@ const inserir = async (req, res) => {
 
     // Validar se exemplar está disponível
     const situacaoDisponivel = 'Disponível';
-    if(!exemplar.isSituacaoValida(situacaoDisponivel)){
+    if (!exemplar.isSituacaoValida(situacaoDisponivel)) {
         return res.status(404).json({
             mensagem: `Não foi possível verificar situação de exemplar`,
             detalhes: `Situação ${situacaoDisponivel} não existe nas configurações de Exemplar`
         });
     }
-    if(exemplarExistente.dataValues.situacao != situacaoDisponivel){
+    if (exemplarExistente.dataValues.situacao != situacaoDisponivel) {
         return res.status(409).json({
             mensagem: `Exemplar não está disponível. Situação: ${exemplarExistente.dataValues.situacao}`
         });
@@ -124,33 +133,43 @@ const inserir = async (req, res) => {
         }
     });
 
-    if(emprestimoPendente){
+    if (emprestimoPendente) {
         return res.status(409).json({
             mensagem: `Usuário possui empréstimos pendentes`
         });
     }
 
     // Validar se pode usar reserva
-    if(data.id_reserva){
+    if (data.id_reserva) {
+        // Validar se status de reserva existe
+        const reservaStatusAberta = 'Aberta';
+        if (!reserva.isStatusValido(reservaStatusAberta)) {
+            return res.status(404).json({
+                mensagem: `Status ${reservaStatusAberta} não encontrado para Reservas`
+            })
+        }
+
         const reservaExistente = await Reserva.findOne({
             where: {
                 id: data.id_reserva,
-                id_usuario: data.id_usuario
+                id_usuario: data.id_usuario,
+                id_exemplar: data.id_exemplar,
+                status: reservaStatusAberta
             }
         });
 
-        if(!reservaExistente){
+        if (!reservaExistente) {
             return res.status(404).json({
                 mensagem: `Reserva não encontrada`
             });
         }
         const reservaStatusValido = 'Aberta';
-        if(!reserva.isStatusValido(reservaStatusValido)){
+        if (!reserva.isStatusValido(reservaStatusValido)) {
             return res.status(404).json({
                 mensagem: `Status ${reservaStatusValido} não encontrado para Reservas`
             })
         }
-        if(reservaExistente.dataValues.status != reservaStatusValido){
+        if (reservaExistente.dataValues.status != reservaStatusValido) {
             return res.status(409).json({
                 mensagem: `Reserva não está aberta para empréstimo: ${reservaExistente.dataValues.situacao}`
             });
@@ -159,6 +178,41 @@ const inserir = async (req, res) => {
     }
 
     // Verifica se os campos de data são válidos
+    const dateColumns = await util.dateColumns(Emprestimo);
+
+    for (const column of dateColumns) {
+        if (data[column]) {
+            if (!util.validarData(data[column])) {
+                return res.status(400).json({
+                    mensagem: `Data inválida para o campo ${column}`,
+                    data: {
+                        [column]: data[column],
+                    },
+                });
+            }
+        }
+    }
+
+    // Verifica se a data de devolução é maior que a data de empréstimo
+    if (data.data_devolucao && data.data_emprestimo) {
+        if (data.data_devolucao < data.data_emprestimo) {
+            return res.status(400).json({
+                mensagem: `Data de devolução deve ser maior que a data de empréstimo`,
+                data_devolucao: data.data_devolucao,
+                data_emprestimo: data.data_emprestimo
+            });
+        }
+    }
+    // Verifica se a data prevista de devolução é maior que a data de empréstimo
+    if (data.data_prevista_devolucao && data.data_emprestimo) {
+        if (data.data_prevista_devolucao < data.data_emprestimo) {
+            return res.status(400).json({
+                mensagem: `Data prevista de devolução deve ser maior que a data de empréstimo`,
+                data_prevista_devolucao: data.data_prevista_devolucao,
+                data_emprestimo: data.data_emprestimo
+            });
+        }
+    }
 
     data.data_prevista_devolucao = data.data_prevista_devolucao || addDays(data.data_emprestimo, util.dias_emprestimo);
 
@@ -171,9 +225,228 @@ const inserir = async (req, res) => {
 
 };
 
-(async () => {
-    const data = '2025-03-10';
-    console.log(util.validarData(data));
-})();
+const alterar = async (req, res) => {
 
-export default { inserir, conflitoEmprestimo };
+    // Verificar se ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'ID não informado'
+        });
+    }
+    const id = req.params.id;
+
+    // Verificar se ID é número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({
+            mensagem: `ID deve ser um número: ${typeof (req.params.id)}`
+        });
+    }
+
+    // Verificar se ID existe
+    const emprestimoExistente = await Emprestimo.findByPk(id);
+    if (!emprestimoExistente) {
+        return res.status(404).json({
+            mensagem: 'Empréstimo não encontrado',
+            id: id
+        });
+    }
+
+    // Filtrando dados
+    const permittedColumns = await util.permittedColumns(Emprestimo.getTableName());
+
+    const data = util.filterObjectKeys(req.body, permittedColumns);
+
+    if(Object.keys(data).length == 0) {
+        return res.status(400).json({
+            mensagem: 'Nenhum dado para alterar',
+            dados: data,
+        });
+    }
+
+    // Validando usuário, se foi enviado
+    if (data.id_usuario) {
+        // Validar se ID de usuário é número
+        if (!util.isNumber(data.id_usuario)) {
+            return res.status(400).json({
+                mensagem: `ID do usuário deve ser um número: ${typeof (data.id_usuario)}`
+            });
+        }
+        // Validar se usuário existe
+        const usuarioExistente = await Usuario.findByPk(data.id_usuario);
+        if (!usuarioExistente) {
+            return res.status(404).json({
+                mensagem: 'Usuário não encontrado',
+                id_usuario: data.id_usuario,
+            });
+        }
+    }
+
+    // Validando exemplar, se foi enviado
+    if (data.id_exemplar) {
+        // Validar se livro do exemplar existe
+        const livroExistente = await Livro.findByPk(exemplarExistente.dataValues.id_livro);
+        if (!livroExistente) {
+            return res.status(404).json({
+                mensagem: `Livro do exemplar não encontrado: ID ${exemplarExistente.dataValues.id_livro}`
+            });
+        }
+
+        // Validar se livro do exemplar está ativo
+        if (!livroExistente.dataValues.ativo) {
+            return res.status(409).json({
+                mensagem: `Livro do exemplar inativo`
+            });
+        }
+
+        // Validar se ID de exemplar é número
+        if (!util.isNumber(data.id_exemplar)) {
+            return res.status(400).json({
+                mensagem: `ID do exemplar deve ser um número: ${typeof (data.id_exemplar)}`
+            });
+        }
+        // Validar se exemplar existe
+        const exemplarExistente = await Exemplar.findByPk(data.id_exemplar);
+        if (!exemplarExistente) {
+            return res.status(404).json({
+                mensagem: `Exemplar não encontrado`
+            });
+        }
+    }
+
+    // Validar se pode usar reserva
+    if (data.id_reserva) {
+        // Validar se status de reserva existe
+        const reservaStatusAberta = 'Aberta';
+        if (!reserva.isStatusValido(reservaStatusAberta)) {
+            return res.status(404).json({
+                mensagem: `Status ${reservaStatusAberta} não encontrado para Reservas`
+            })
+        }
+
+        const reservaExistente = await Reserva.findOne({
+            where: {
+                id: data.id_reserva,
+                id_usuario: data.id_usuario,
+                id_exemplar: data.id_exemplar,
+                status: reservaStatusAberta
+            }
+        });
+
+        if (!reservaExistente) {
+            return res.status(404).json({
+                mensagem: `Reserva não encontrada`
+            });
+        }
+        const reservaStatusValido = 'Aberta';
+        if (!reserva.isStatusValido(reservaStatusValido)) {
+            return res.status(404).json({
+                mensagem: `Status ${reservaStatusValido} não encontrado para Reservas`
+            })
+        }
+        if (reservaExistente.dataValues.status != reservaStatusValido) {
+            return res.status(409).json({
+                mensagem: `Reserva não está aberta para empréstimo: ${reservaExistente.dataValues.situacao}`
+            });
+        }
+
+    }
+
+    // Verifica se os campos de data são válidos
+    const dateColumns = await util.dateColumns(Emprestimo);
+
+    dateColumns.forEach((column) => {
+        if (data[column]) {
+            if (!util.validarData(data[column])) {
+                return res.status(400).json({
+                    mensagem: `Data inválida para o campo ${column}`,
+                    data: data[column],
+                });
+            }
+        }
+    });
+
+    // Verifica se a data de devolução é maior que a data de empréstimo
+    if (data.data_devolucao && data.data_emprestimo) {
+        if (data.data_devolucao < data.data_emprestimo) {
+            return res.status(400).json({
+                mensagem: `Data de devolução deve ser maior que a data de empréstimo`,
+                data_devolucao: data.data_devolucao,
+                data_emprestimo: data.data_emprestimo
+            });
+        }
+    }
+    // Verifica se a data prevista de devolução é maior que a data de empréstimo
+    if (data.data_prevista_devolucao && data.data_emprestimo) {
+        if (data.data_prevista_devolucao < data.data_emprestimo) {
+            return res.status(400).json({
+                mensagem: `Data prevista de devolução deve ser maior que a data de empréstimo`,
+                data_prevista_devolucao: data.data_prevista_devolucao,
+                data_emprestimo: data.data_emprestimo
+            });
+        }
+    }
+
+    // data.data_prevista_devolucao = data.data_prevista_devolucao || addDays(data.data_emprestimo, util.dias_emprestimo);
+
+    return await Emprestimo.update(data, {
+        where: { id }
+    })
+        .then(emprestimo => res.status(200).json({
+            mensagem: `Empréstimo ${id} alterado com sucesso`,
+        }))
+        .catch(error => res.status(500).json({
+            mensagem: `Erro ao alterar empréstimo`,
+            erro: error
+        }));
+
+}
+
+const devolver = async (req, res) => {
+
+    // Verificar se ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'ID não informado'
+        });
+    }
+    const id = req.params.id;
+    // Verificar se ID é número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({
+            mensagem: `ID deve ser um número: ${typeof (req.params.id)}`
+        });
+    }
+    // Verificar se ID existe
+    const emprestimoExistente = await Emprestimo.findByPk(id);
+    if (!emprestimoExistente) {
+        return res.status(404).json({
+            mensagem: 'Empréstimo não encontrado',
+            id: id
+        });
+    }
+    // Verificar se já foi devolvido
+    if (emprestimoExistente.dataValues.data_devolucao) {
+        return res.status(409).json({
+            mensagem: 'Empréstimo já devolvido',
+            id: id
+        });
+    }
+}
+
+export default { inserir, conflitoEmprestimo, alterar, devolver, listar };
+
+// "permitidas": [
+// 		"data_emprestimo",
+// 		"data_prevista_devolucao",
+// 		"data_devolucao",
+// 		"observacoes",
+// 		"id_usuario",
+// 		"id_reserva",
+// 		"id_exemplar"
+// 	],
+// 	"obrigatorias": [
+// 		"data_emprestimo",
+// 		"data_prevista_devolucao",
+// 		"id_usuario",
+// 		"id_exemplar"
+// 	],

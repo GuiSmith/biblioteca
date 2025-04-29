@@ -99,6 +99,9 @@ app.post('/funcionario/:id/senha', funcionario.definirSenha);
 app.post('/funcionario/:id/login', funcionario.login);
 
 // Emprestimo
+app.get('/emprestimo', emprestimo.listar);
 app.post('/emprestimo', emprestimo.inserir);
+app.put('/emprestimo/:id', emprestimo.alterar);
+app.patch('/emprestimo/:id/devolver', emprestimo.devolver);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
