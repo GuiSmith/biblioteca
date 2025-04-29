@@ -306,6 +306,11 @@ const alterar = async (req, res) => {
         });
     }
 
+    // Removendo campos que não podem ser atualizados manualmnente
+    if(data.status){
+        delete data.status;
+    }
+
     // Validando usuário, se foi enviado
     if (data.id_usuario) {
         // Validar se ID de usuário é número
@@ -482,8 +487,18 @@ const devolver = async (req, res) => {
         });
     }
     // Filtrando dados
-    const permittedColumns = await util.permittedColumns(Emprestimo.getTableName());
+    const normalPermittedColumns = await util.permittedColumns(Emprestimo.getTableName());
+    const actualPermittedColumns = ['data_devolucao', 'observacoes'];
+    // Verificando se as colunas realmente existem
+    for (const column of actualPermittedColumns) {
+        if(!normalPermittedColumns[column]){
+            return res.status(404).json({
+                mensagem: `As colunas necessárias não existem`
+            });
+        }
+    }
     const data = util.filterObjectKeys(req.body, permittedColumns);
+
     // Verifica se a data de devolução é válida
 
 }
