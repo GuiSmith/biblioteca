@@ -37,6 +37,16 @@ const conflitoEmprestimo = async (id_exemplar, dataEmprestimo) => {
 
 };
 
+/**
+ * @param {string} status - Status do empréstimo
+ * @returns {boolean} - Retorna true se o status for válido, false caso contrário
+ * @description Verifica se o status do empréstimo é válido
+ */
+const statusEmprestimoValido = (status) => {
+    const statusValidos = Emprestimo.getAttributes().status.values;
+    return statusValidos.includes(status);
+}
+
 // Funções externas
 
 const listar = async (req, res) => {
@@ -216,13 +226,46 @@ const inserir = async (req, res) => {
 
     data.data_prevista_devolucao = data.data_prevista_devolucao || addDays(data.data_emprestimo, util.dias_emprestimo);
 
-    return await Emprestimo.create(data)
-        .then(emprestimo => res.status(201).json(emprestimo))
-        .catch(error => res.status(500).json({
+    // Iniciar transação para criar empréstimo e mudar status do exemplar
+    const transaction = await Emprestimo.sequelize.transaction();
+    try {
+        // Criar empréstimo
+        const emprestimo = await Emprestimo.create(data, { transaction });
+        // Validar se situação de exemplar existe
+        const situacaoEmprestado = 'Emprestado';
+        if (!exemplar.isSituacaoValida(situacaoEmprestado)) {
+            throw new Error("Situação de exemplar inválida");
+        }
+        // Mudar status do exemplar para "Emprestado"
+        await Exemplar.update({ situacao: situacaoEmprestado }, {
+            where: { id: data.id_exemplar },
+            transaction
+        });
+        // Mudar status da reserva para Finalizado
+        if (data.id_reserva) {
+            const reservaStatusFinalizado = 'Finalizado';
+            if (!reserva.isStatusValido(reservaStatusFinalizado)) {
+                throw new Error("Situação de reserva inválida");
+            }
+            await Reserva.update({ status: reservaStatusFinalizado }, {
+                where: { id: data.id_reserva },
+                transaction
+            });
+        }
+        // Confirmar transação
+        await transaction.commit();
+        return res.status(201).json({
+            mensagem: 'Empréstimo inserido com sucesso',
+            emprestimo: emprestimo,
+        });
+    } catch (error) {
+        // Se ocorrer erro, reverter transação
+        await transaction.rollback();
+        return res.status(500).json({
             mensagem: `Erro ao inserir empréstimo`,
             erro: error
-        }));
-
+        });
+    }
 };
 
 const alterar = async (req, res) => {
@@ -424,29 +467,25 @@ const devolver = async (req, res) => {
             id: id
         });
     }
+    // Verificar se o status de emprestado existe
+    const statusEmprestado = 'Emprestado';
+    if (!statusEmprestimoValido(statusEmprestado)) {
+        return res.status(404).json({
+            mensagem: `Status ${statusEmprestado} não encontrado para Empréstimos`
+        })
+    }
     // Verificar se já foi devolvido
-    if (emprestimoExistente.dataValues.data_devolucao) {
+    if (emprestimoExistente.dataValues.status != statusEmprestado) {
         return res.status(409).json({
             mensagem: 'Empréstimo já devolvido',
             id: id
         });
     }
+    // Filtrando dados
+    const permittedColumns = await util.permittedColumns(Emprestimo.getTableName());
+    const data = util.filterObjectKeys(req.body, permittedColumns);
+    // Verifica se a data de devolução é válida
+
 }
 
 export default { inserir, conflitoEmprestimo, alterar, devolver, listar };
-
-// "permitidas": [
-// 		"data_emprestimo",
-// 		"data_prevista_devolucao",
-// 		"data_devolucao",
-// 		"observacoes",
-// 		"id_usuario",
-// 		"id_reserva",
-// 		"id_exemplar"
-// 	],
-// 	"obrigatorias": [
-// 		"data_emprestimo",
-// 		"data_prevista_devolucao",
-// 		"id_usuario",
-// 		"id_exemplar"
-// 	],

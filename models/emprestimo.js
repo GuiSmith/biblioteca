@@ -35,6 +35,11 @@ const Emprestimo = sequelize.define('emprestimo', {
     id_exemplar: {
         type: DataTypes.INTEGER,
         allowNull: false,
+    },
+    status: {
+        type: DataTypes.ENUM('Emprestado', 'Devolvido'),
+        allowNull: true,
+        defaultValue: 'Emprestado'
     }
 });
 
