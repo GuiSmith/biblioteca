@@ -235,5 +235,6 @@ const gerarToken = async () => {
 // Constantes
 const dias_emprestimo = 15;
 const saltRounds = 10;
+const maximo_renovacoes = 2;
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dateColumns, gerarToken };
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dateColumns, gerarToken, maximo_renovacoes };

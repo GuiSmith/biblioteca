@@ -347,7 +347,4 @@ const excluir = async (req, res) => {
         }));
 }
 
-(async () => {
-    console.log(Reserva.associations);
-})();
-export default { inserir, alterar, listar, excluir, isStatusValido };
+export default { inserir, alterar, listar, excluir, isStatusValido, conflitoReserva };

@@ -40,6 +40,10 @@ const Emprestimo = sequelize.define('emprestimo', {
         type: DataTypes.ENUM('Emprestado', 'Devolvido'),
         allowNull: true,
         defaultValue: 'Emprestado'
+    },
+    quantidade_renovacoes: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
     }
 });
 

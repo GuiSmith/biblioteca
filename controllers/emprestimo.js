@@ -8,11 +8,13 @@ import Livro from '../models/livro.js';
 import Usuario from '../models/usuario.js';
 import Exemplar from '../models/exemplar.js';
 import Reserva from '../models/reserva.js';
+import Multa from '../models/multa.js';
 
 // Controladores
 import util from './util.js';
 import exemplar from './exemplar.js';
 import reserva from './reserva.js';
+import multa from './multa.js';
 
 // Funções utilitárias
 
@@ -56,6 +58,33 @@ const listar = async (req, res) => {
             mensagem: `Erro ao listar empréstimos`,
             erro: error
         }));
+}
+
+const selecionar = async (req, res) => {
+    // Verificar se ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'ID não informado'
+        });
+    }
+    const id = req.params.id;
+
+    // Verificar se ID é número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({
+            mensagem: `ID deve ser um número: ${typeof (req.params.id)}`
+        });
+    }
+
+    // Verificar se ID existe
+    const emprestimoExistente = await Emprestimo.findByPk(id);
+    if (!emprestimoExistente) {
+        return res.status(404).json({
+            mensagem: 'Empréstimo não encontrado',
+            id: id
+        });
+    }
+    return res.status(200).json(emprestimoExistente);
 }
 
 const inserir = async (req, res) => {
@@ -205,7 +234,7 @@ const inserir = async (req, res) => {
 
     // Verifica se a data de devolução é maior que a data de empréstimo
     if (data.data_devolucao && data.data_emprestimo) {
-        if (data.data_devolucao < data.data_emprestimo) {
+        if (new Date(data.data_devolucao) < new Date(data.data_emprestimo)) {
             return res.status(400).json({
                 mensagem: `Data de devolução deve ser maior que a data de empréstimo`,
                 data_devolucao: data.data_devolucao,
@@ -215,7 +244,7 @@ const inserir = async (req, res) => {
     }
     // Verifica se a data prevista de devolução é maior que a data de empréstimo
     if (data.data_prevista_devolucao && data.data_emprestimo) {
-        if (data.data_prevista_devolucao < data.data_emprestimo) {
+        if (new Date(data.data_prevista_devolucao) < new Date(data.data_emprestimo)) {
             return res.status(400).json({
                 mensagem: `Data prevista de devolução deve ser maior que a data de empréstimo`,
                 data_prevista_devolucao: data.data_prevista_devolucao,
@@ -299,7 +328,7 @@ const alterar = async (req, res) => {
 
     const data = util.filterObjectKeys(req.body, permittedColumns);
 
-    if(Object.keys(data).length == 0) {
+    if (Object.keys(data).length == 0) {
         return res.status(400).json({
             mensagem: 'Nenhum dado para alterar',
             dados: data,
@@ -307,7 +336,7 @@ const alterar = async (req, res) => {
     }
 
     // Removendo campos que não podem ser atualizados manualmnente
-    if(data.status){
+    if (data.status) {
         delete data.status;
     }
 
@@ -415,7 +444,7 @@ const alterar = async (req, res) => {
 
     // Verifica se a data de devolução é maior que a data de empréstimo
     if (data.data_devolucao && data.data_emprestimo) {
-        if (data.data_devolucao < data.data_emprestimo) {
+        if (new Date(data.data_devolucao) < new Date(data.data_emprestimo)) {
             return res.status(400).json({
                 mensagem: `Data de devolução deve ser maior que a data de empréstimo`,
                 data_devolucao: data.data_devolucao,
@@ -425,7 +454,7 @@ const alterar = async (req, res) => {
     }
     // Verifica se a data prevista de devolução é maior que a data de empréstimo
     if (data.data_prevista_devolucao && data.data_emprestimo) {
-        if (data.data_prevista_devolucao < data.data_emprestimo) {
+        if (new Date(data.data_prevista_devolucao) < new Date(data.data_emprestimo)) {
             return res.status(400).json({
                 mensagem: `Data prevista de devolução deve ser maior que a data de empréstimo`,
                 data_prevista_devolucao: data.data_prevista_devolucao,
@@ -446,7 +475,6 @@ const alterar = async (req, res) => {
             mensagem: `Erro ao alterar empréstimo`,
             erro: error
         }));
-
 }
 
 const devolver = async (req, res) => {
@@ -458,12 +486,14 @@ const devolver = async (req, res) => {
         });
     }
     const id = req.params.id;
+
     // Verificar se ID é número
     if (!util.isNumber(id)) {
         return res.status(400).json({
             mensagem: `ID deve ser um número: ${typeof (req.params.id)}`
         });
     }
+
     // Verificar se ID existe
     const emprestimoExistente = await Emprestimo.findByPk(id);
     if (!emprestimoExistente) {
@@ -472,6 +502,7 @@ const devolver = async (req, res) => {
             id: id
         });
     }
+
     // Verificar se o status de emprestado existe
     const statusEmprestado = 'Emprestado';
     if (!statusEmprestimoValido(statusEmprestado)) {
@@ -479,6 +510,7 @@ const devolver = async (req, res) => {
             mensagem: `Status ${statusEmprestado} não encontrado para Empréstimos`
         })
     }
+
     // Verificar se já foi devolvido
     if (emprestimoExistente.dataValues.status != statusEmprestado) {
         return res.status(409).json({
@@ -486,21 +518,205 @@ const devolver = async (req, res) => {
             id: id
         });
     }
-    // Filtrando dados
-    const normalPermittedColumns = await util.permittedColumns(Emprestimo.getTableName());
-    const actualPermittedColumns = ['data_devolucao', 'observacoes'];
-    // Verificando se as colunas realmente existem
-    for (const column of actualPermittedColumns) {
-        if(!normalPermittedColumns[column]){
-            return res.status(404).json({
-                mensagem: `As colunas necessárias não existem`
+
+    const dataDevolucao = format(new Date(), 'yyyy-MM-dd');
+
+    // Checando se o status de devolvido existe
+    const statusDevolvido = 'Devolvido';
+    if (!statusEmprestimoValido(statusDevolvido)) {
+        return res.status(404).json({
+            mensagem: `Status ${statusDevolvido} não encontrado para Empréstimos`
+        })
+    }
+
+    const data = {
+        data_devolucao: dataDevolucao,
+        status: statusDevolvido
+    };
+
+    // Iniciando transação
+    const transaction = await Emprestimo.sequelize.transaction();
+
+    try {
+        // Atualizando empréstimo
+        const emprestimoLInhasAfetadas = await Emprestimo.update(data, {
+            where: { id },
+            transaction
+        });
+
+        if (emprestimoLInhasAfetadas == 0) {
+            throw new Error("Erro ao atualizar empréstimo");
+        }
+
+        // Buscando exemplar
+        const exemplarAtualizado = await Exemplar.findOne({
+            where: { id: emprestimoExistente.dataValues.id_exemplar },
+            transaction
+        });
+
+        // Verificando se o exemplar existe
+        if (exemplarAtualizado) {
+
+            // Verificando se o status de disponível existe
+            const situacaoDisponivel = 'Disponível';
+            if (!exemplar.isSituacaoValida(situacaoDisponivel)) {
+                throw new Error("Situação de exemplar inválida");
+            }
+
+            // Atualizando status do exemplar para "Disponível"
+            const exemplarLinhasAfetadas = await Exemplar.update({ situacao: situacaoDisponivel }, {
+                where: { id: exemplarAtualizado.dataValues.id },
+                transaction
+            });
+
+            if (exemplarLinhasAfetadas == 0) {
+                throw new Error("Erro ao atualizar exemplar");
+            }
+        }
+
+        transaction.commit();
+
+        return res.status(200).json({
+            mensagem: 'Empréstimo devolvido com sucesso',
+        });
+
+    } catch (error) {
+        // Se ocorrer erro, reverter transação
+        await transaction.rollback();
+        return res.status(500).json({
+            mensagem: `Erro ao devolver empréstimo`,
+            erro: error
+        });
+    }
+};
+
+const renovar = async (req, res) => {
+
+    // Verificar se ID foi informado
+    if (!req.params.id) {
+        return res.status(400).json({
+            mensagem: 'ID não informado'
+        });
+    }
+    const id = req.params.id;
+
+    // Verificar se ID é número
+    if (!util.isNumber(id)) {
+        return res.status(400).json({
+            mensagem: `ID deve ser um número: ${typeof (req.params.id)}`
+        });
+    }
+
+    // Verificar se ID existe
+    const emprestimoExistente = await Emprestimo.findByPk(id);
+    if (!emprestimoExistente) {
+        return res.status(404).json({
+            mensagem: 'Empréstimo não encontrado',
+            id: id
+        });
+    }
+
+    // Verificar se o status de emprestado existe
+    const statusEmprestado = 'Emprestado';
+    if (!statusEmprestimoValido(statusEmprestado)) {
+        return res.status(404).json({
+            mensagem: `Status ${statusEmprestado} não encontrado para Empréstimos`
+        })
+    }
+
+    // Verificar se já foi devolvido
+    if (emprestimoExistente.dataValues.status != statusEmprestado) {
+        return res.status(409).json({
+            mensagem: 'Empréstimo já devolvido',
+            id: id
+        });
+    }
+
+    // Verificar se o exemplar do empréstimo existe
+    const exemplarExistente = await Exemplar.findByPk(emprestimoExistente.dataValues.id_exemplar);
+    if (!exemplarExistente) {
+        return res.status(404).json({
+            mensagem: `Exemplar não encontrado`
+        });
+    }
+
+    // Verificar se o status de reserva existe
+    const reservaStatusAberta = 'Aberta';
+    if (!reserva.isStatusValido(reservaStatusAberta)) {
+        return res.status(404).json({
+            mensagem: `Status ${reservaStatusAberta} não encontrado para Reservas`
+        })
+    }
+
+    // Verificar se já existe reserva para este exemplar (use reserva.conflitoReserva())
+    const reservasExistentes = await Reserva.findAll({
+        where: {
+            id_exemplar: emprestimoExistente.dataValues.id_exemplar,
+            status: reservaStatusAberta
+        }
+    });
+
+    const dataHoje = format(new Date(), 'yyyy-MM-dd');
+    const data = {};
+    data.data_prevista_devolucao = format(addDays(dataHoje,util.dias_emprestimo), 'yyyy-MM-dd');
+
+    for (const reservaExistente of reservasExistentes) {
+        // Verificando conflitos de reservas
+        const conflito = await reserva.conflitoReserva(emprestimoExistente.dataValues.id_exemplar, dataHoje, data.data_prevista_devolucao, emprestimoExistente.dataValues.id_reserva);
+
+        if(conflito){
+            return res.status(409).json({
+                mensagem: `Não é possível renovar, exemplar já resevado`,
+                reserva: reservaExistente.dataValues
             });
         }
     }
-    const data = util.filterObjectKeys(req.body, permittedColumns);
 
-    // Verifica se a data de devolução é válida
+    // Verificar se este empréstimo já teve 2 renovações (use util.dias_renovacao)
+    if(emprestimoExistente.dataValues.quantidade_renovacoes >= util.maximo_renovacoes){
+        return res.status(409).json({
+            mensagem: `Máximo de ${util.maximo_renovacoes} renovações atingidas para este empréstimo!`
+        });
+    }
 
+    // Verificar status de multa aberta
+    const multaStatusAberta = 'A';
+    if(!multa.isStatusValido(multaStatusAberta)){
+        return res.status(404).json({
+            mensagem: `Nenhuma multa com status '${multaStatusAberta}' foi encontrada`
+        });
+    }
+    
+    // Verificar se usuário tem pendềncias financeiras
+    const multaAberta = await Multa.findOne({
+        where: { 
+            id_usuario: emprestimoExistente.dataValues.id_usuario,
+            status: multaStatusAberta
+        }
+    });
+
+    data.quantidade_renovacoes = emprestimoExistente.dataValues.quantidade_renovacoes + 1;
+
+    // Realizando renovação
+    try {
+        const renovacaoLinhasAfetadas=  await Emprestimo.update(data, {
+            where: { id }
+        });
+
+        if(renovacaoLinhasAfetadas > 0){
+            return res.status(200).json({
+                mensagem: `Renovação realizada com sucesso`,
+            });
+        }
+    
+        throw new Error("Renovação não realizada");
+        
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: `Houve um erro ao realizar renovação`,
+            erro: error
+        });
+    }
 }
 
-export default { inserir, conflitoEmprestimo, alterar, devolver, listar };
+export default { inserir, selecionar, conflitoEmprestimo, alterar, devolver, listar, renovar };
