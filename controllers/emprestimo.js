@@ -47,7 +47,7 @@ const conflitoEmprestimo = async (id_exemplar, dataEmprestimo) => {
 const statusEmprestimoValido = (status) => {
     const statusValidos = Emprestimo.getAttributes().status.values;
     return statusValidos.includes(status);
-}
+};
 
 // Funções externas
 
@@ -58,7 +58,7 @@ const listar = async (req, res) => {
             mensagem: `Erro ao listar empréstimos`,
             erro: error
         }));
-}
+};
 
 const selecionar = async (req, res) => {
     // Verificar se ID foi informado
@@ -85,7 +85,7 @@ const selecionar = async (req, res) => {
         });
     }
     return res.status(200).json(emprestimoExistente);
-}
+};
 
 const inserir = async (req, res) => {
 
@@ -475,7 +475,7 @@ const alterar = async (req, res) => {
             mensagem: `Erro ao alterar empréstimo`,
             erro: error
         }));
-}
+};
 
 const devolver = async (req, res) => {
 
@@ -717,6 +717,6 @@ const renovar = async (req, res) => {
             erro: error
         });
     }
-}
+};
 
 export default { inserir, selecionar, conflitoEmprestimo, alterar, devolver, listar, renovar };
