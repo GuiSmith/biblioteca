@@ -66,10 +66,10 @@ app.put('/livro_autor/:id', livroAutor.alterar);
 app.delete('/livro_autor/:id', livroAutor.excluir);
 
 // Exemplar
+app.get('/exemplar', exemplar.listar);
 app.get('/exemplar/:id', exemplar.selecionar);
 app.post('/exemplar', exemplar.inserir);
 app.put('/exemplar/:id', exemplar.alterar);
-app.delete('/exemplar/:id', exemplar.excluir);
 
 // Usuário
 app.get('/usuario', usuario.listar);
