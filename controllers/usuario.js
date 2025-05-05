@@ -270,22 +270,6 @@ const definirSenha = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        // Verifica se o ID foi informado
-        if (!req.params.id) {
-            return res.status(400).json({
-                mensagem: 'Informe o ID do usuário'
-            });
-        }
-        const id = req.params.id;
-
-        // Verifica se o funcionário existe
-        const usuarioExistente = await Usuario.findByPk(id);
-        if (!usuarioExistente) {
-            return res.status(404).json({
-                mensagem: `Funcionário com ID ${id} não encontrado`
-            });
-        }
-
         // Filtrando dados
         const dadosObrigatorios = ['email', 'senha'];
         const data = util.filterObjectKeys(req.body, dadosObrigatorios);
@@ -294,6 +278,16 @@ const login = async (req, res) => {
                 mensagem: 'Dados obrigatórios não informados',
                 obrigatorios: dadosObrigatorios,
                 informados: Object.keys(data)
+            });
+        }
+
+        const usuarioExistente = await Usuario.findOne({
+            where: { email: data.email }
+        });
+
+        if(!usuarioExistente){
+            return res.status(404).json({
+                mensagem: `Usuário não encontrado`
             });
         }
 
@@ -329,7 +323,7 @@ const login = async (req, res) => {
             });
         }
 
-        const token = await util.gerarToken('usuario');
+        const token = await util.gerarTokenUnico(Usuario);
 
         if(!token){
             throw new Error("Token não gerado corretamente");

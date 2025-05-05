@@ -5,11 +5,13 @@ import cors from 'cors';
 
 // Middlewares
 import midCors from "./middlewares/cors.js";
+import auth from './middlewares/auth.js';
 
 const app = express();
 
 app.use(express.json());
 app.use(cors(midCors.corsOptions));
+app.use(auth.auth);
 
 const PORT = process.env.PORT || 5000;
 
@@ -29,6 +31,8 @@ import multa from './controllers/multa.js';
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
+
+app.get('/', );
 
 // Utilitários
 app.get('/tabelas', util.tabelas);
@@ -76,7 +80,7 @@ app.get('/usuario/:id', usuario.selecionar);
 app.post('/usuario', usuario.inserir);
 app.put('/usuario/:id', usuario.alterar);
 app.post('/usuario/:id/senha', usuario.definirSenha);
-app.post('/usuario/:id/login', usuario.login);
+app.post('/usuario/login', usuario.login);
 
 // Editora
 app.get('/editora', editora.listar);
@@ -97,7 +101,7 @@ app.post('/funcionario', funcionario.inserir);
 app.put('/funcionario/:id', funcionario.alterar);
 app.patch('/funcionario/:id/demitir', funcionario.demitir);
 app.post('/funcionario/:id/senha', funcionario.definirSenha);
-app.post('/funcionario/:id/login', funcionario.login);
+app.post('/funcionario/login', funcionario.login);
 
 // Emprestimo
 app.get('/emprestimo', emprestimo.listar);

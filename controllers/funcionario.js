@@ -318,22 +318,6 @@ const definirSenha = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        // Verifica se o ID foi informado
-        if (!req.params.id) {
-            return res.status(400).json({
-                mensagem: 'Informe o ID do funcionário'
-            });
-        }
-        const id = req.params.id;
-
-        // Verifica se o funcionário existe
-        const funcionarioExistente = await Funcionario.findByPk(id);
-        if (!funcionarioExistente) {
-            return res.status(404).json({
-                mensagem: `Funcionário com ID ${id} não encontrado`
-            });
-        }
-
         // Filtrando dados
         const dadosObrigatorios = ['email', 'senha'];
         const data = util.filterObjectKeys(req.body, dadosObrigatorios);
@@ -345,28 +329,41 @@ const login = async (req, res) => {
             });
         }
 
+        // Buscando funcionário
+
+        const funcionarioExistente = await Funcionario.findOne({
+            where: { email: data.email },
+            raw: true
+        });
+
+        if(!funcionarioExistente){
+            return res.status(404).json({
+                mensagem: `Funcionário não encontrado!`
+            });
+        }
+
         // Verificando se funcionário está inativo
-        if (funcionarioExistente.dataValues.ativo == false) {
+        if (funcionarioExistente.ativo == false) {
             return res.status(409).json({
                 mensagem: "Não é possível fazer login de funcionário inativo"
             });
         }
 
         // Verificando se funcionário não tem e-mail ou senha
-        if (funcionarioExistente.dataValues.email == null || funcionarioExistente.dataValues.senha == null) {
+        if (funcionarioExistente.email == null || funcionarioExistente.senha == null) {
             return res.status(409).json({
                 mensagem: "Este funcionário não tem email ou senha registrados",
                 funcionario: {
-                    email: funcionarioExistente.dataValues.email,
-                    senha: funcionarioExistente.dataValues.senha
+                    email: funcionarioExistente.email,
+                    senha: funcionarioExistente.senha
                 }
             });
         }
 
         // Verificando se funcionário digitou a senha correta ou não
-        const senhaCorreta = await util.compararSenha(data.senha, funcionarioExistente.dataValues.senha);
-        if (funcionarioExistente.dataValues.email != data.email || !senhaCorreta) {
-            console.log(`email: ${funcionarioExistente.dataValues.email != data.email}`);
+        const senhaCorreta = await util.compararSenha(data.senha, funcionarioExistente.senha);
+        if (funcionarioExistente.email != data.email || !senhaCorreta) {
+            console.log(`email: ${funcionarioExistente.email != data.email}`);
             console.log(`senha: ${senhaCorreta}`);
             return res.status(409).json({
                 mensagem: "E-mail ou senha incorretos",
@@ -377,14 +374,14 @@ const login = async (req, res) => {
             });
         }
 
-        const token = await util.gerarToken('funcionario');
+        const token = await util.gerarTokenUnico(Funcionario);
 
         if(!token){
             throw new Error("Token não gerado corretamente");
         }
 
         const [funcionarioLinhasAtualizadas] = await Funcionario.update({ token }, {
-            where: { id }
+            where: { id: funcionarioExistente.id }
         });
 
         if (funcionarioLinhasAtualizadas > 0) {
