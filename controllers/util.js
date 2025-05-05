@@ -228,8 +228,18 @@ const dateColumns = async (Model) => {
         .map(([fieldName, _]) => fieldName);
 }
 
-const gerarToken = async () => {
-    return crypto.randomBytes(32).toString('hex');
+const tokenLength = {
+    usuario: 64,
+    funcionario: 128
+};
+
+const gerarToken = async (type) => {
+
+    if(!tokenLength.hasOwnProperty(type)){
+        return false;
+    }
+
+    return crypto.randomBytes((tokenLength[type]/2)).toString('hex');
 }
 
 // Constantes

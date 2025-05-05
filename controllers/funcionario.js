@@ -1,5 +1,5 @@
 // Modelos
-import { RelationshipType } from 'sequelize/lib/errors/database/foreign-key-constraint-error';
+import '../models/relacionamentos.js';
 import Funcionario from '../models/funcionario.js';
 
 // Controladores
@@ -377,7 +377,7 @@ const login = async (req, res) => {
             });
         }
 
-        const token = await util.gerarToken();
+        const token = await util.gerarToken('funcionario');
 
         if(!token){
             throw new Error("Token não gerado corretamente");

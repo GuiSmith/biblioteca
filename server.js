@@ -1,16 +1,15 @@
+// Bibliotecas
 import express from "express";
 import sequelize from "./banco.js";
 import cors from 'cors';
 
+// Middlewares
+import midCors from "./middlewares/cors.js";
+
 const app = express();
-const corsOptions = {
-    origin: 'https://guismith.github.io/biblioteca',  // Domínio permitido
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],  // Métodos permitidos
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Cabeçalhos permitidos
-};
 
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors(midCors.corsOptions));
 
 const PORT = process.env.PORT || 5000;
 
@@ -77,6 +76,7 @@ app.get('/usuario/:id', usuario.selecionar);
 app.post('/usuario', usuario.inserir);
 app.put('/usuario/:id', usuario.alterar);
 app.post('/usuario/:id/senha', usuario.definirSenha);
+app.post('/usuario/:id/login', usuario.login);
 
 // Editora
 app.get('/editora', editora.listar);

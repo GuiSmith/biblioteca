@@ -329,7 +329,7 @@ const login = async (req, res) => {
             });
         }
 
-        const token = await util.gerarToken();
+        const token = await util.gerarToken('usuario');
 
         if(!token){
             throw new Error("Token não gerado corretamente");
