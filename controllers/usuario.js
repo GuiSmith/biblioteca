@@ -268,4 +268,91 @@ const definirSenha = async (req, res) => {
     }
 }
 
-export default { listar, selecionar, inserir, alterar, definirSenha };
+const login = async (req, res) => {
+    try {
+        // Verifica se o ID foi informado
+        if (!req.params.id) {
+            return res.status(400).json({
+                mensagem: 'Informe o ID do usuário'
+            });
+        }
+        const id = req.params.id;
+
+        // Verifica se o funcionário existe
+        const usuarioExistente = await Usuario.findByPk(id);
+        if (!usuarioExistente) {
+            return res.status(404).json({
+                mensagem: `Funcionário com ID ${id} não encontrado`
+            });
+        }
+
+        // Filtrando dados
+        const dadosObrigatorios = ['email', 'senha'];
+        const data = util.filterObjectKeys(req.body, dadosObrigatorios);
+        if (!util.keysMatch(data, dadosObrigatorios)) {
+            return res.status(400).json({
+                mensagem: 'Dados obrigatórios não informados',
+                obrigatorios: dadosObrigatorios,
+                informados: Object.keys(data)
+            });
+        }
+
+        // Verificando se funcionário está inativo
+        if (usuarioExistente.dataValues.ativo == false) {
+            return res.status(409).json({
+                mensagem: "Não é possível fazer login de funcionário inativo"
+            });
+        }
+
+        // Verificando se funcionário não tem e-mail ou senha
+        if (usuarioExistente.dataValues.email == null || usuarioExistente.dataValues.senha == null) {
+            return res.status(409).json({
+                mensagem: "Este funcionário não tem email ou senha registrados",
+                Usuario: {
+                    email: usuarioExistente.dataValues.email,
+                    senha: usuarioExistente.dataValues.senha
+                }
+            });
+        }
+
+        // Verificando se funcionário digitou a senha correta ou não
+        const senhaCorreta = await util.compararSenha(data.senha, usuarioExistente.dataValues.senha);
+        if (usuarioExistente.dataValues.email != data.email || !senhaCorreta) {
+            console.log(`email: ${usuarioExistente.dataValues.email != data.email}`);
+            console.log(`senha: ${senhaCorreta}`);
+            return res.status(409).json({
+                mensagem: "E-mail ou senha incorretos",
+                Usuario: {
+                    email: data.email,
+                    senha: data.senha
+                }
+            });
+        }
+
+        const token = await util.gerarToken();
+
+        if(!token){
+            throw new Error("Token não gerado corretamente");
+        }
+
+        const [UsuarioLinhasAtualizadas] = await Usuario.update({ token }, {
+            where: { id }
+        });
+
+        if (UsuarioLinhasAtualizadas > 0) {
+            return res.status(200).json({
+                mensagem: 'Login realizado com sucesso',
+                token
+            });
+        }
+
+        throw new Error("Login não realizado");
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: `Erro interno`,
+            error
+        });
+    }
+}
+
+export default { listar, selecionar, inserir, alterar, definirSenha, login };
