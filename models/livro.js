@@ -19,7 +19,7 @@ const Livro = sequelize.define("livro", {
         allowNull: false,
     },
     foto: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     sinopse: {
