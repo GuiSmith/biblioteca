@@ -59,7 +59,7 @@ const inserir = async (req, res) => {
         const data = util.filterObjectKeys(req.body, permittedColumns);
 
         if (!util.keysMatch(data, requiredColumns)) {
-            res.status(400).json({
+            return res.status(400).json({
                 mensagem: 'Dados obrigatórios não informados',
                 obrigatorios: requiredColumns,
                 informados: Object.keys(data)
