@@ -222,14 +222,10 @@ const listarExemplares = async (req, res) => {
             where: { id_livro },
         });
 
-        if(exemplares.length > 0){
-            return res.status(200).json({
-                livro: livroExistente.dataValues,
-                exemplares: exemplares.map(exemplar => exemplar.dataValues)
-            });
-        }
-
-        return res.status(204).send();
+	return res.status(200).json({
+		livro: livroExistente.dataValues,
+		exemplares: exemplares.length > 0 ? exemplares.map(exemplar => exemplar.dataValues) : []
+	});
         
     } catch (error) {
         return res.status(500).json({
