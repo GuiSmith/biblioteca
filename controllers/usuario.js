@@ -330,7 +330,7 @@ const login = async (req, res) => {
         }
 
         const [UsuarioLinhasAtualizadas] = await Usuario.update({ token }, {
-            where: { id }
+            where: { id: usuarioExistente.dataValues.id }
         });
 
         if (UsuarioLinhasAtualizadas > 0) {
@@ -344,7 +344,7 @@ const login = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             mensagem: `Erro interno`,
-            error
+            erro: error.message
         });
     }
 }
