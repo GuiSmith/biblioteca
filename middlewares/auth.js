@@ -19,7 +19,7 @@ const auth = async (req, res, next) => {
         };
 
         for (const route of publicRoutes) {
-            if(route.path == req.path && route.method == req.method){
+            if((route.path == req.path && route.method == req.method) || req.method == 'OPTIONS' || req.method == 'GET'){
                 return next();
             }
         }
