@@ -7,14 +7,10 @@ import cors from 'cors';
 import midCors from "./middlewares/cors.js";
 import auth from './middlewares/auth.js';
 
-const app = express();
+// Serviços
+import servicos from './servicos/search.js';
 
-app.use(express.json());
-app.use(cors(midCors.corsOptions));
-app.use(auth.auth);
-
-const PORT = process.env.PORT || 5000;
-
+// Controllers
 import util from './controllers/util.js';
 import categoria from "./controllers/categoria.js";
 import autor from './controllers/autor.js';
@@ -28,11 +24,21 @@ import funcionario from './controllers/funcionario.js';
 import emprestimo from './controllers/emprestimo.js';
 import multa from './controllers/multa.js';
 
+const app = express();
+
+app.use(express.json());
+app.use(cors(midCors.corsOptions));
+app.use(auth.auth);
+
+const PORT = process.env.PORT || 5000;
+
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
 
 app.get('/', );
+
+app.get('/:tabela',servicos.search);
 
 // Utilitários
 app.get('/tabelas', util.tabelas);
