@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../banco.js";
 
-const EnderecoUsuario = sequelize.define('endereco_usuario', {
+const EditoraEndereco = sequelize.define('editora_endereco', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -24,7 +24,7 @@ const EnderecoUsuario = sequelize.define('endereco_usuario', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    id_usuario: {
+    id_editora: {
         type: DataTypes.INTEGER,
         allowNull: false,
     },
@@ -34,4 +34,4 @@ const EnderecoUsuario = sequelize.define('endereco_usuario', {
     },
 });
 
-export default EnderecoUsuario;
+export default EditoraEndereco;

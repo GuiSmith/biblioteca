@@ -9,12 +9,17 @@ const Livro = sequelize.define("livro", {
         autoIncrement: true,
         primaryKey: true,
     },
+    ativo: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+        allowNull: true,
+    },
     titulo: {
         type: DataTypes.STRING(100),
         allowNull: false,
     },
     foto: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.TEXT,
         allowNull: true,
     },
     sinopse: {

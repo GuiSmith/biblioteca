@@ -38,12 +38,12 @@ const colunas = async (req, res) => {
 
         const formattedColumns = Object.entries(columns).map(([name, details]) => {
             return {
-            name,
-            allowNull: details.allowNull,
-            defaultValue: details.defaultValue,
-            type: details.type,
-            length: details.type.match(/\((\d+)\)/)?.[1] || null,
-            enumValues: details.type == 'USER-DEFINED' ? details.special : null,
+                name,
+                allowNull: details.allowNull,
+                defaultValue: details.defaultValue,
+                type: details.type,
+                length: details.type.match(/\((\d+)\)/)?.[1] || null,
+                enumValues: details.type == 'USER-DEFINED' ? details.special : null,
             };
         });
 
@@ -80,7 +80,7 @@ const permittedColumns = async (table) => {
     return sequelize.getQueryInterface().describeTable(table)
         .then((columns) => {
             return Object.entries(columns)
-                .filter(([name,details]) => name.toLocaleLowerCase() !== 'id' && name.toLocaleLowerCase() !== 'createdat' && name.toLocaleLowerCase() !== 'updatedat')
+                .filter(([name, details]) => name.toLocaleLowerCase() !== 'id' && name.toLocaleLowerCase() !== 'createdat' && name.toLocaleLowerCase() !== 'updatedat')
                 .map(([name]) => name);
         })
         .catch((error) => {
@@ -97,7 +97,7 @@ const uniqueColumns = async (table) => {
             .map(index => (
                 index.fields[0].attribute
             ));
-        
+
         return [...new Set(uniqueIndexes)];
 
     } catch (error) {
@@ -112,9 +112,9 @@ const checkUniqueColumn = async (Model, column, value, id = null) => {
         where: { [column]: value }
     });
 
-    if(register){
-        if(id){
-            if(register.dataValues.id == id){
+    if (register) {
+        if (id) {
+            if (register.dataValues.id == id) {
                 return false;
             }
         }
@@ -208,7 +208,7 @@ const validarData = (data) => {
     if (typeof data !== 'string') {
         return false;
     }
-    
+
     const dataFormat = 'yyyy-MM-dd';
 
     return isMatch(data, dataFormat);
@@ -222,18 +222,45 @@ const compararSenha = async (senha, senhaCriptografada) => {
     return await bcrypt.compare(senha, senhaCriptografada);
 }
 
-const dataColumns = async (Model) => {
+const dateColumns = async (Model) => {
     return Object.entries(await Model.getAttributes())
         .filter(([_, attributes]) => attributes.type.constructor.name === 'DATEONLY')
         .map(([fieldName, _]) => fieldName);
 }
 
-const gerarToken = async () => {
-    return crypto.randomBytes(32).toString('hex');
+const tokenLength = {
+    usuario: 64,
+    funcionario: 128
+};
+
+const gerarToken = async (length) => {
+
+    return crypto.randomBytes((length / 2)).toString('hex');
+}
+
+const gerarTokenUnico = async (Model) => {
+    const nomeTabelaModelo = await Model.getTableName();
+
+    if (!tokenLength.hasOwnProperty(nomeTabelaModelo)) {
+        return null;
+    }
+
+    while (1) {
+        const token = await gerarToken(tokenLength[nomeTabelaModelo]);
+
+        const quantidadeComToken = await Model.count({
+            where: { token }
+        });
+
+        if(quantidadeComToken == 0){
+            return token;
+        }
+    }
 }
 
 // Constantes
 const dias_emprestimo = 15;
 const saltRounds = 10;
+const maximo_renovacoes = 2;
 
-export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dataColumns, gerarToken };
+export default { tabelas, colunas, requiredColumns, permittedColumns, uniqueColumns, checkUniqueColumn, isNumber, filterObjectKeys, keysMatch, normalizarCPF, normalizarTelefone, validarCPF, normalizarCNPJ, validarCNPJ, validarData, dias_emprestimo, criptografarSenha, compararSenha, dateColumns, gerarToken, maximo_renovacoes, tokenLength, gerarTokenUnico };

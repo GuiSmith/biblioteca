@@ -1,19 +1,16 @@
+// Bibliotecas
 import express from "express";
 import sequelize from "./banco.js";
 import cors from 'cors';
 
-const app = express();
-const corsOptions = {
-    origin: 'https://guismith-library-6141e10fb627.herokuapp.com',  // Domínio permitido
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],  // Métodos permitidos
-    allowedHeaders: ['Content-Type', 'Authorization'],  // Cabeçalhos permitidos
-};
+// Middlewares
+import midCors from "./middlewares/cors.js";
+import auth from './middlewares/auth.js';
 
-app.use(express.json());
-app.use(cors(corsOptions));
+// Serviços
+import servicos from './servicos/search.js';
 
-const PORT = process.env.PORT || 5000;
-
+// Controllers
 import util from './controllers/util.js';
 import categoria from "./controllers/categoria.js";
 import autor from './controllers/autor.js';
@@ -24,10 +21,24 @@ import usuario from './controllers/usuario.js';
 import editora from './controllers/editora.js';
 import reserva from './controllers/reserva.js';
 import funcionario from './controllers/funcionario.js';
+import emprestimo from './controllers/emprestimo.js';
+import multa from './controllers/multa.js';
+
+const app = express();
+
+app.use(express.json());
+app.use(cors(midCors.corsOptions));
+app.use(auth.auth);
+
+const PORT = process.env.PORT || 5000;
 
 sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
+
+app.get('/', );
+
+app.get('/:tabela',servicos.search);
 
 // Utilitários
 app.get('/tabelas', util.tabelas);
@@ -64,10 +75,10 @@ app.put('/livro_autor/:id', livroAutor.alterar);
 app.delete('/livro_autor/:id', livroAutor.excluir);
 
 // Exemplar
+app.get('/exemplar', exemplar.listar);
 app.get('/exemplar/:id', exemplar.selecionar);
 app.post('/exemplar', exemplar.inserir);
 app.put('/exemplar/:id', exemplar.alterar);
-app.delete('/exemplar/:id', exemplar.excluir);
 
 // Usuário
 app.get('/usuario', usuario.listar);
@@ -75,6 +86,7 @@ app.get('/usuario/:id', usuario.selecionar);
 app.post('/usuario', usuario.inserir);
 app.put('/usuario/:id', usuario.alterar);
 app.post('/usuario/:id/senha', usuario.definirSenha);
+app.post('/usuario/login', usuario.login);
 
 // Editora
 app.get('/editora', editora.listar);
@@ -86,6 +98,7 @@ app.delete('/editora/:id', editora.excluir);
 app.get('/reserva', reserva.listar);
 app.post('/reserva', reserva.inserir);
 app.put('/reserva/:id', reserva.alterar);
+app.delete('/reserva/:id', reserva.excluir);
 
 // Funcionários
 app.get('/funcionario',funcionario.listar);
@@ -94,6 +107,21 @@ app.post('/funcionario', funcionario.inserir);
 app.put('/funcionario/:id', funcionario.alterar);
 app.patch('/funcionario/:id/demitir', funcionario.demitir);
 app.post('/funcionario/:id/senha', funcionario.definirSenha);
-app.post('/funcionario/:id/login', funcionario.login);
+app.post('/funcionario/login', funcionario.login);
+
+// Emprestimo
+app.get('/emprestimo', emprestimo.listar);
+app.get('/emprestimo/:id', emprestimo.selecionar);
+app.post('/emprestimo', emprestimo.inserir);
+app.put('/emprestimo/:id', emprestimo.alterar);
+app.patch('/emprestimo/:id/devolver', emprestimo.devolver);
+app.patch('/emprestimo/:id/renovar', emprestimo.renovar);
+
+// Multa
+app.get('/multa', multa.listar);
+app.get('/multa/:id', multa.selecionar);
+app.post('/multa', multa.inserir);
+app.put('/multa/:id', multa.alterar);
+app.delete('/multa/:id', multa.excluir);
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
