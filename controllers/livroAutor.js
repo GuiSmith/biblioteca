@@ -69,6 +69,7 @@ const inserir = async (req, res) => {
     const requiredColumns = await util.requiredColumns(livroAutor.getTableName());
     const permittedColumns = await util.permittedColumns(livroAutor.getTableName());
     const data = util.filterObjectKeys(req.body, permittedColumns);
+    
     if (!util.keysMatch(data, requiredColumns)) {
         res.status(400).json({
             mensagem: "Dados obrigatórios não informados",

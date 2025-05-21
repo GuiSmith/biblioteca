@@ -17,7 +17,7 @@ const models = {
   exemplar: Exemplar,
   funcionario: Funcionario,
   livro: Livro,
-  livroAutor: LivroAutor,
+  livro_autor: LivroAutor,
   reserva: Reserva,
   usuario: Usuario
 };
