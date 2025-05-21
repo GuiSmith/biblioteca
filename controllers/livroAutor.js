@@ -36,9 +36,14 @@ const listarLivros = async (req, res) => {
 const listarAutores = async (req, res) => {
     // Verifica se foi informado um ID
     if(!req.params.id_livro){
-        res.status(400).json({ mensagem: "ID não informado" });
+        return res.status(400).json({ mensagem: "ID não informado" });
     }
     const id_livro = req.params.id_livro;
+    
+    // Verifica se ID é um número
+    if(!util.isNumber(id_livro)){
+        return res.status(400).json({ mensagem: 'ID não é número!' });
+    }
 
     const livro = await Livro.findByPk(id_livro);
 
