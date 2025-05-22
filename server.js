@@ -38,7 +38,7 @@ sequelize.authenticate()
 
 app.get('/', );
 
-app.get('/:tabela',servicos.search);
+app.get('/search/:tabela',servicos.search);
 
 // Utilitários
 app.get('/tabelas', util.tabelas);
