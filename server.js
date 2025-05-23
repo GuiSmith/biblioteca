@@ -36,7 +36,10 @@ sequelize.authenticate()
     .then(() => console.log("Conexão com o banco de dados estabelecida"))
     .catch((error) => console.log(error));
 
-app.get('/', );
+app.get('/', (req, res) => {
+    console.log('Teste');
+    return res.status(204).send();
+});
 
 app.get('/search/:tabela',servicos.search);
 
