@@ -82,6 +82,7 @@ const inserir = async (req, res) => {
         const requiredColumns = await util.requiredColumns(Categoria.getTableName());
         const permittedColumns = await util.permittedColumns(Categoria.getTableName());
         const data = util.filterObjectKeys(req.body, permittedColumns);
+        console.log(data,permittedColumns,requiredColumns);
         if (util.keysMatch(data, requiredColumns) === false) {
             return res.status(400).json({
                 mensagem: "Dados obrigatórios não informados",
@@ -90,10 +91,11 @@ const inserir = async (req, res) => {
             });
         }
 
-        const novaCategoria = await Categoria.create(req.body);
+        const novaCategoria = await Categoria.create(data);
 
         return res.status(201).json(novaCategoria);
     } catch (error) {
+        console.log(error.message);
         return res.status(500).json({
             mensagem: `Erro interno`,
             error
