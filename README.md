@@ -21,35 +21,12 @@ sudo systemctl status postgresql
 
 3.1 **Conectar ao PostgreSQL como superusuário:**
 ```bash
-sudo -u postgres psql
+psql -U postgres -h localhost
 ```
 
 3.2 **Criar o banco de dados `biblioteca`:**
 ```sql
 CREATE DATABASE biblioteca;
-```
-
-3.3 **Criar o usuário `biblioteca_user`:**
-```sql
-CREATE USER biblioteca_user WITH PASSWORD 'Senha123@';
-```
-
-3.4 **Criar um schema específico para a aplicação:**
-```sql
-CREATE SCHEMA biblioteca_schema AUTHORIZATION biblioteca_user;
-```
-
-3.5 **Conceder permissões adequadas ao usuário no schema criado:**
-```sql
-GRANT USAGE, CREATE ON SCHEMA biblioteca_schema TO biblioteca_user;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA biblioteca_schema TO biblioteca_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA biblioteca_schema
-GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO biblioteca_user;
-```
-
-3.6 **Definir o schema padrão ao conectar no banco:**
-```sql
-ALTER ROLE biblioteca_user SET search_path TO biblioteca_schema;
 ```
 
 ### Conectar ao Banco
@@ -58,3 +35,20 @@ Para acessar o banco com o novo usuário:
 psql -U biblioteca_user -d biblioteca -h localhost -W
 ```
 
+### Configurando migração
+
+1. **Configurar arquivo .env**
+Crie um arquivo chamado `.env` na raiz do projeto com o seguinte conteúdo:
+
+```env
+DATABASE_URL=postgresql://biblioteca_user:sua_senha@localhost:5432/biblioteca
+```
+
+Altere os valores conforme necessário para o seu ambiente.
+
+2. **Execute a migração**
+Utilize a ferramenta de migração do seu projeto (por exemplo, com o Prisma):
+
+```bash
+node migrate.js
+```
