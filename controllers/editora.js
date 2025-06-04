@@ -26,6 +26,31 @@ const listar = async (req, res) => {
     }
 };
 
+const selecionar = async (req, res) => {
+    try {
+        // Verifica se foi passado um ID na requisição
+        if (!req.params.id) {
+            return res.status(400).json({ mensagem: 'ID não informado' });
+        }
+        const id = req.params.id;
+        // Verifica se o ID é um número
+        if (!util.isNumber(id)) {
+            return res.status(400).json({ mensagem: 'ID inválido' });
+        }
+        // Verifica se o ID existe
+        const editora = await Editora.findByPk(id);
+        if (!editora) {
+            return res.status(404).json({ mensagem: 'Editora não encontrada' });
+        }
+        return res.status(200).json(editora);
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: `Erro interno`,
+            error
+        });
+    }
+};
+
 const inserir = async (req, res) => {
     try {
         // Filtrando data
@@ -213,4 +238,4 @@ const excluir = async (req, res) => {
     }
 }
 
-export default { inserir, listar, alterar, excluir };
+export default { inserir, listar, selecionar, alterar, excluir };

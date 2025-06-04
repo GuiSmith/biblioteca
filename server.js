@@ -93,6 +93,7 @@ app.post('/usuario/login', usuario.login);
 
 // Editora
 app.get('/editora', editora.listar);
+app.get('/editora/:id', editora.selecionar);
 app.post('/editora', editora.inserir);
 app.put('/editora/:id', editora.alterar);
 app.delete('/editora/:id', editora.excluir);
