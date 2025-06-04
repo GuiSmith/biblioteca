@@ -109,7 +109,8 @@ const inserir = async (req, res) => {
     const transaction = await Emprestimo.sequelize.transaction();
 
     try {
-        const requiredColumns = await util.requiredColumns(Emprestimo.getTableName());
+        const naturalRequiredColumns = await util.requiredColumns(Emprestimo.getTableName());
+        const requiredColumns = naturalRequiredColumns.filter(column => !['data_emprestimo','data_prevista_devolucao'].includes(column));
         const permittedColumns = await util.permittedColumns(Emprestimo.getTableName());
 
         const data = util.filterObjectKeys(req.body, permittedColumns);
@@ -246,6 +247,12 @@ const inserir = async (req, res) => {
             }
         }
 
+        // Insere data de empréstimo como hoje se não foi informada
+        if(!data.hasOwnProperty('data_emprestimo')){
+            data.data_emprestimo = format(new Date(), 'yyyy-MM-dd');
+            console.log(data.data_emprestimo);
+        }
+
         // Verifica se a data de devolução é maior que a data de empréstimo
         if (data.hasOwnProperty('data_devolucao')) {
             if (new Date(data.data_devolucao) < new Date(data.data_emprestimo)) {
@@ -306,7 +313,7 @@ const inserir = async (req, res) => {
 
         return res.status(500).json({
             mensagem: `Erro interno`,
-            error
+            error: error.message
         });
     }
 };
