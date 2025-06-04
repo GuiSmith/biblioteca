@@ -155,7 +155,7 @@ const alterar = async (req, res) => {
 
         for (const column of uniqueColumns) {
             if (data.hasOwnProperty(column)) {
-                const exists = await util.checkUniqueColumn(Funcionario, column, data[column]);
+                const exists = await util.checkUniqueColumn(Funcionario, column, data[column], id);
                 if (exists) {
                     return res.status(409).json({
                         mensagem: `O valor para o dado '${column}' já está em uso`,
@@ -167,12 +167,12 @@ const alterar = async (req, res) => {
         }
 
         if (data.hasOwnProperty('senha')) {
-            if (data.senha.length < 6 || data.senha.length > 20) {
+            if (data.senha.length < 6) {
                 return res.status(400).json({
-                    mensagem: `A senha deve ter entre 6 e 20 caracteres`
+                    mensagem: `A senha deve ter no mínimo 6 caracteres`
                 });
             }
-            data.senha = await util.criptografarSenha(data.senha);
+            data.senha = data.senha == funcionarioExistente.dataValues.senha ? data.senha : await util.criptografarSenha(data.senha);
         }
 
         const [funcionarioLinhasAtualizadas] = await Funcionario.update(data, {
