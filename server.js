@@ -37,7 +37,7 @@ sequelize.authenticate()
     .catch((error) => console.log(error));
 
 app.get('/', (req, res) => {
-    console.log('Teste');
+    console.log('Autenticação');
     return res.status(204).send();
 });
 
