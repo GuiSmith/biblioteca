@@ -27,7 +27,7 @@ const Funcionario = sequelize.define('funcionario', {
         unique: true,
     },
     data_nascimento: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: true,
     },
     senha: {
