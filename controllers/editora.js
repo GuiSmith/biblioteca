@@ -4,8 +4,56 @@ import { Op } from 'sequelize';
 // Modelos
 import Editora from '../models/editora.js';
 import Exemplar from '../models/exemplar.js';
+import Livro from '../models/livro.js';
 // Controladores
 import util from './util.js';
+
+const listarLivros = async (req, res) => {
+    try {
+        // Verifica se foi passado um ID na requisição
+        if (!req.params.id) {
+            return res.status(400).json({ mensagem: 'ID não informado' });
+        }
+        const id = req.params.id;
+        // Verifica se o ID é um número
+        if (!util.isNumber(id)) {
+            return res.status(400).json({ mensagem: 'ID inválido' });
+        }
+        // Verifica se a editora existe
+        const editora = await Editora.findByPk(id);
+        if (!editora) {
+            return res.status(404).json({ mensagem: 'Editora não encontrada' });
+        }
+
+        // Busca os livros distintos da editora
+        const exemplares = await Exemplar.findAll({
+            where: { id_editora: id },
+            attributes: ['id_livro'],
+            group: ['id_livro']
+        });
+
+        const idsLivros = exemplares.map(e => e.id_livro);
+
+        console.log(`ID livros: ${idsLivros}`);
+
+        if (idsLivros.length === 0) {
+            return res.status(204).send();
+        }
+
+        // Busca os livros pelo id_livro
+        const livros = await Livro.findAll({
+            where: { id: idsLivros }
+        });
+
+        return res.status(200).json(livros);
+
+    } catch (error) {
+        return res.status(500).json({
+            mensagem: `Erro interno`,
+            error
+        });
+    }
+}
 
 const listar = async (req, res) => {
 
@@ -238,4 +286,4 @@ const excluir = async (req, res) => {
     }
 }
 
-export default { inserir, listar, selecionar, alterar, excluir };
+export default { inserir, listar, selecionar, alterar, excluir, listarLivros };
