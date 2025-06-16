@@ -18,8 +18,6 @@ const auth = async (req, res, next) => {
             funcionario: Funcionario
         };
 
-        console.log(req.path);
-
         for (const route of publicRoutes) {
             if(
                 (route.path == req.path && route.method == req.method)
